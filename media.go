@@ -45,7 +45,7 @@ type File struct {
 func createMedia(mediaPath string, cachepath string, enableThumbCache,
 	genThumbsOnStartup, genThumbsOnAdd, autoRotate, enablePreview bool,
 	previewMaxSide int, genPreviewOnStartup, genPreviewOnAdd, enabledCacheCleanup bool) *Media {
-	log.Info("Media path:", mediaPath)
+	log.Info("Media path: ", mediaPath)
 	if enableThumbCache || enablePreview {
 		directory := filepath.Dir(cachepath)
 		err := os.MkdirAll(directory, os.ModePerm)
@@ -55,12 +55,12 @@ func createMedia(mediaPath string, cachepath string, enableThumbCache,
 			enableThumbCache = false
 			enablePreview = false
 		} else {
-			log.Info("Cache path:", cachepath)
+			log.Info("Cache path: ", cachepath)
 		}
 	} else {
 		log.Info("Cache disabled")
 	}
-	log.Info("JPEG auto rotate:", autoRotate)
+	log.Info("JPEG auto rotate: ", autoRotate)
 	log.Infof("Image preview: %t  (max width/height %d px)", enablePreview, previewMaxSide)
 	media := &Media{mediaPath: filepath.ToSlash(filepath.Clean(mediaPath)),
 		cachepath:          filepath.ToSlash(filepath.Clean(cachepath)),
@@ -70,7 +70,7 @@ func createMedia(mediaPath string, cachepath string, enableThumbCache,
 		previewMaxSide:     previewMaxSide,
 		enableCacheCleanup: enabledCacheCleanup,
 		preCacheInProgress: false}
-	log.Info("Video thumbnails supported (ffmpeg installed):", media.videoThumbnailSupport())
+	log.Info("Video thumbnails supported (ffmpeg installed): ", media.videoThumbnailSupport())
 	if enableThumbCache && genThumbsOnStartup || enablePreview && genPreviewOnStartup {
 		go media.generateAllCache(enableThumbCache && genThumbsOnStartup, enablePreview && genPreviewOnStartup)
 	}
@@ -218,7 +218,7 @@ func (m *Media) isJPEG(pathAndFile string) bool {
 func (m *Media) extractEXIF(relativeFilePath string) *exif.Exif {
 	fullFilePath, err := m.getFullMediaPath(relativeFilePath)
 	if err != nil {
-		log.Infof("Unable to get full media path for %s\n", relativeFilePath)
+		log.Info("Unable to get full media path for ", relativeFilePath)
 		return nil
 	}
 	if !m.isJPEG(fullFilePath) {
@@ -226,13 +226,13 @@ func (m *Media) extractEXIF(relativeFilePath string) *exif.Exif {
 	}
 	efile, err := os.Open(fullFilePath)
 	if err != nil {
-		log.Warnf("Could not open file for EXIF decoding. File: %s reason: %s\n", fullFilePath, err)
+		log.Warnf("Could not open file for EXIF decoding. File: %s reason: %s", fullFilePath, err)
 		return nil
 	}
 	defer efile.Close()
 	ex, err := exif.Decode(efile)
 	if err != nil {
-		log.Debugf("No EXIF. file %s reason: %s\n", fullFilePath, err)
+		log.Debugf("No EXIF. file %s reason: %s", fullFilePath, err)
 		return nil
 	}
 	return ex
@@ -307,7 +307,7 @@ func (m *Media) writeEXIFThumbnail(w io.Writer, relativeFilePath string) error {
 		// Rotation is needed
 		img, err := imaging.Decode(bytes.NewReader(thumbBytes))
 		if err != nil {
-			log.Warn("Unable to decode EXIF thumbnail for", relativeFilePath)
+			log.Warn("Unable to decode EXIF thumbnail for ", relativeFilePath)
 			w.Write(thumbBytes)
 			return nil
 		}
@@ -371,7 +371,7 @@ func (m *Media) generateErrorIndicationFile(errorIndicationFile string, err erro
 	if err2 == nil {
 		defer errorFile.Close()
 		errorFile.WriteString(err.Error())
-		log.Info("Created:", errorIndicationFile)
+		log.Info("Created: ", errorIndicationFile)
 	} else {
 		log.Warnf("Unable to create %s. Reason: %s", errorIndicationFile, err2)
 	}
@@ -428,7 +428,7 @@ func (m *Media) generateThumbnail(relativeFilePath string) (string, error) {
 	}
 
 	// No thumb exist. Create it
-	log.Info("Creating new thumbnail for", relativeFilePath)
+	log.Info("Creating new thumbnail for ", relativeFilePath)
 	startTime := time.Now().UnixNano()
 	fullMediaPath, err := m.getFullMediaPath(relativeFilePath)
 	if err != nil {
@@ -693,7 +693,7 @@ func (m *Media) generatePreview(relativeFilePath string) (string, bool, error) {
 	}
 
 	// No preview exist. Create it
-	log.Info("Creating new preview file for", relativeFilePath)
+	log.Info("Creating new preview file for ", relativeFilePath)
 	startTime := time.Now().UnixNano()
 	err = m.generateImagePreview(fullMediaPath, previewFileName)
 	if err != nil {
@@ -858,23 +858,20 @@ func (m *Media) generateAllCache(thumbnails, preview bool) {
 	deltaTime := (time.Now().UnixNano() - startTime) / int64(time.Second)
 	minutes := int(deltaTime / 60)
 	seconds := int(deltaTime) - minutes*60
-	log.Infof(`Generating cache took %d minutes and %d seconds
-	  Number of folders: %d
-	  Number of images: %d
-	  Number of videos: %d
-	  Number of images with embedded EXIF: %d
-	  Number of generated image thumbnails: %d
-	  Number of generated video thumbnails: %d
-	  Number of generated image previews: %d
-	  Number of failed folders: %d
-	  Number of failed image thumbnails: %d
-	  Number of failed video thumbnails: %d
-	  Number of failed image previews: %d
-	  Number of small images not require preview: %d
-	  Number of removed cache files: %d`, minutes, seconds, stat.NbrOfFolders, stat.NbrOfImages,
-		stat.NbrOfVideos, stat.NbrOfExif, stat.NbrOfImageThumb, stat.NbrOfVideoThumb, stat.NbrOfImagePreview,
-		stat.NbrOfFailedFolders, stat.NbrOfFailedImageThumb, stat.NbrOfFailedVideoThumb,
-		stat.NbrOfFailedImagePreview, stat.NbrOfSmallImages, stat.NbrRemovedCacheFiles)
+	log.Infof("Generating cache took %d minutes and %d seconds", minutes, seconds)
+	log.Info("Number of folders: ", stat.NbrOfFolders)
+	log.Info("Number of images: ", stat.NbrOfImages)
+	log.Info("Number of videos: ", stat.NbrOfVideos)
+	log.Info("Number of images with embedded EXIF: ", stat.NbrOfExif)
+	log.Info("Number of generated image thumbnails: ", stat.NbrOfImageThumb)
+	log.Info("Number of generated video thumbnails: ", stat.NbrOfVideoThumb)
+	log.Info("Number of generated image previews: ", stat.NbrOfImagePreview)
+	log.Info("Number of failed folders: ", stat.NbrOfFailedFolders)
+	log.Info("Number of failed image thumbnails: ", stat.NbrOfFailedImageThumb)
+	log.Info("Number of failed video thumbnails: ", stat.NbrOfFailedVideoThumb)
+	log.Info("Number of failed image previews: ", stat.NbrOfFailedImagePreview)
+	log.Info("Number of small images not require preview: ", stat.NbrOfSmallImages)
+	log.Info("Number of removed cache files: ", stat.NbrRemovedCacheFiles)
 }
 
 // cleanupCache removes all files and directories in the cache directory
@@ -885,7 +882,7 @@ func (m *Media) generateAllCache(thumbnails, preview bool) {
 // Returns number of removed files and directories
 func (m *Media) cleanupCache(relativePath string, expectedMediaFiles []File) int {
 	fullCachePath, _ := m.getFullCachePath(relativePath)
-	log.Debug("Cleaning up directory:", fullCachePath)
+	log.Debug("Cleaning up directory: ", fullCachePath)
 
 	// Figure possible directories, thumb, preview and error file names
 	cacheFileNames := make([]string, 0, len(expectedMediaFiles)*5)
@@ -919,7 +916,7 @@ func (m *Media) cleanupCache(relativePath string, expectedMediaFiles []File) int
 	for _, fileInfo := range fileInfos {
 		if !contains(cacheFileNames, fileInfo.Name()) {
 			filePath := filepath.Join(fullCachePath, fileInfo.Name())
-			log.Debug("Removing", filePath)
+			log.Debug("Removing ", filePath)
 			os.RemoveAll(filePath)
 			nbrRemovedFiles++
 		}

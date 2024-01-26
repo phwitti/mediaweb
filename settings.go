@@ -48,7 +48,7 @@ func findConfFile() string {
 		}
 	}
 	if result == "" {
-		log.Panic("No configuration file found. Looked in", strings.Join(confPaths, ", "))
+		log.Panic("No configuration file found. Looked in ", strings.Join(confPaths, ", "))
 	}
 	return result
 }
@@ -57,7 +57,7 @@ func findConfFile() string {
 // don't exist or if any of the mandatory settings don't exist.
 func loadSettings(fileName string) settings {
 	result := settings{}
-	log.Info("Loading configuration:", fileName)
+	log.Info("Loading configuration: ", fileName)
 	config, err := ini.Load(fileName)
 	if err != nil {
 		log.Panic(err)
@@ -70,7 +70,7 @@ func loadSettings(fileName string) settings {
 
 	// Load port (MANDATORY)
 	if !section.HasKey("port") {
-		log.Panic("Mandatory property 'port' is not defined in", fileName)
+		log.Panic("Mandatory property 'port' is not defined in ", fileName)
 	}
 	port, err := section.Key("port").Int()
 	if err != nil {
@@ -85,7 +85,7 @@ func loadSettings(fileName string) settings {
 
 	// Load mediaPath (MANDATORY)
 	if !section.HasKey("mediapath") {
-		log.Panic("Mandatory property 'mediapath' is not defined in", fileName)
+		log.Panic("Mandatory property 'mediapath' is not defined in ", fileName)
 	}
 	mediaPath := section.Key("mediapath").MustString("")
 	result.mediaPath = mediaPath
@@ -114,84 +114,39 @@ func loadSettings(fileName string) settings {
 
 	// Load enableThumbCache (OPTIONAL)
 	// Default: true
-	enableThumbCache, err := section.Key("enablethumbcache").Bool()
-	if err != nil {
-		enableThumbCache = true
-		log.Warn(err)
-	}
-	result.enableThumbCache = enableThumbCache
+	result.enableThumbCache = readOptionalBool(section, "enablethumbcache", true)
 
 	// Load genthumbsonstartup (OPTIONAL)
 	// Default: false
-	genThumbsOnStartup, err := section.Key("genthumbsonstartup").Bool()
-	if err != nil {
-		genThumbsOnStartup = false
-		log.Warn(err)
-	}
-	result.genThumbsOnStartup = genThumbsOnStartup
+	result.genThumbsOnStartup = readOptionalBool(section, "genthumbsonstartup", false)
 
 	// Load genthumbsonadd (OPTIONAL)
 	// Default: true
-	genThumbsOnAdd, err := section.Key("genthumbsonadd").Bool()
-	if err != nil {
-		genThumbsOnAdd = true
-		log.Warn(err)
-	}
-	result.genThumbsOnAdd = genThumbsOnAdd
+	result.genThumbsOnAdd = readOptionalBool(section, "genthumbsonadd", true)
 
 	// Load autoRotate (OPTIONAL)
 	// Default: true
-	autoRotate, err := section.Key("autorotate").Bool()
-	if err != nil {
-		autoRotate = true
-		log.Warn(err)
-	}
-	result.autoRotate = autoRotate
+	result.autoRotate = readOptionalBool(section, "autorotate", true)
 
 	// Load enablePreview (OPTIONAL)
 	// Default: false
-	enablePreview, err := section.Key("enablepreview").Bool()
-	if err != nil {
-		enablePreview = false
-		log.Warn(err)
-	}
-	result.enablePreview = enablePreview
+	result.enablePreview = readOptionalBool(section, "enablepreview", false)
 
 	// Load previewMaxSide (OPTIONAL)
 	// Default: 1280 (pixels)
-	previewMaxSide, err := section.Key("previewmaxside").Int()
-	if err != nil {
-		previewMaxSide = 1280
-		log.Warn(err)
-	}
-	result.previewMaxSide = previewMaxSide
+	result.previewMaxSide = readOptionalInt(section, "previewmaxside", 1280)
 
 	// Load genpreviewonstartup (OPTIONAL)
 	// Default: false
-	genPreviewOnStartup, err := section.Key("genpreviewonstartup").Bool()
-	if err != nil {
-		genPreviewOnStartup = false
-		log.Warn(err)
-	}
-	result.genPreviewOnStartup = genPreviewOnStartup
+	result.genPreviewOnStartup = readOptionalBool(section, "genpreviewonstartup", false)
 
 	// Load genpreviewonadd (OPTIONAL)
 	// Default: true
-	genPreviewOnAdd, err := section.Key("genpreviewonadd").Bool()
-	if err != nil {
-		genPreviewOnAdd = true
-		log.Warn(err)
-	}
-	result.genPreviewOnAdd = genPreviewOnAdd
+	result.genPreviewOnAdd = readOptionalBool(section, "genpreviewonadd", true)
 
 	// Load enableCacheCleanup (OPTIONAL)
 	// Default: false
-	enableCacheCleanup, err := section.Key("enablecachecleanup").Bool()
-	if err != nil {
-		enableCacheCleanup = false
-		log.Warn(err)
-	}
-	result.enableCacheCleanup = enableCacheCleanup
+	result.enableCacheCleanup = readOptionalBool(section, "enablecachecleanup", false)
 
 	// Load logFile (OPTIONAL)
 	// Default: "" (log to stderr)
@@ -255,4 +210,30 @@ func pathEquals(path1, path2 string) bool {
 		return true
 	}
 	return false
+}
+
+func readOptionalBool(section *ini.Section, key string, defaultVal bool) bool {
+	if !section.HasKey(key) {
+		return defaultVal
+	}
+
+	result, err := section.Key(key).Bool()
+	if err != nil {
+		result = defaultVal
+		log.Warn(err)
+	}
+	return result
+}
+
+func readOptionalInt(section *ini.Section, key string, defaultVal int) int {
+	if !section.HasKey(key) {
+		return defaultVal
+	}
+
+	result, err := section.Key(key).Int()
+	if err != nil {
+		result = defaultVal
+		log.Warn(err)
+	}
+	return result
 }

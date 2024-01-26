@@ -117,7 +117,7 @@ func (u *Updater) updaterThread() {
 			if !u.media.isPreCacheInProgress() {
 				path, ok := u.nextDirectoryToUpdate()
 				if ok {
-					log.Info("Updating thumbs in", path)
+					log.Info("Updating thumbs in ", path)
 					u.media.generateCache(path, false, u.thumbnails, u.preview)
 				}
 			}

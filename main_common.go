@@ -10,17 +10,17 @@ func mainCommon() *WebAPI {
 	s := loadSettings(findConfFile())
 	log.SetLevel(s.logLevel)
 	if s.logFile != "" {
-		log.Info("Logging will continue in file", s.logFile)
+		log.Info("Logging will continue in file ", s.logFile)
 		file, err := os.OpenFile(s.logFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 		if err != nil {
-			log.Panic("Failed to create logfile", s.logFile)
+			log.Panic("Failed to create logfile ", s.logFile)
 		}
 		log.SetOutput(file)
 		defer file.Close()
 	}
-	log.Info("Version:", applicationVersion)
-	log.Info("Build time:", applicationBuildTime)
-	log.Info("Git hash:", applicationGitHash)
+	log.Info("Version: ", applicationVersion)
+	log.Info("Build time: ", applicationBuildTime)
+	log.Info("Git hash: ", applicationGitHash)
 	media := createMedia(s.mediaPath, s.cachePath,
 		s.enableThumbCache, s.genThumbsOnStartup,
 		s.genThumbsOnAdd, s.autoRotate, s.enablePreview, s.previewMaxSide,

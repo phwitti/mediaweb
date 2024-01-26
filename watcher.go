@@ -51,7 +51,7 @@ func (w *Watcher) startWatcher() {
 	w.updater.startUpdater()
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Error("Unable to watch for new media since:", err)
+		log.Error("Unable to watch for new media since: ", err)
 		return
 	}
 
@@ -64,7 +64,7 @@ func (w *Watcher) startWatcher() {
 // sub folders (i.e. recursively).
 // The error return value is just for test purposes.
 func (w *Watcher) watchFolder(watcher *fsnotify.Watcher, path string) error {
-	log.Debug("Watching folder:", path)
+	log.Debug("Watching folder: ", path)
 	err := watcher.Add(path)
 	if err != nil {
 		log.Errorf("Watch folder %s error: %s", path, err)
@@ -96,7 +96,7 @@ func (w *Watcher) mediaWatcher(watcher *fsnotify.Watcher) {
 		select {
 		case event, ok := <-watcher.Events:
 			if ok {
-				log.Debug("Watcher event:", event)
+				log.Debug("Watcher event: ", event)
 				path := event.Name
 				// relativeMediaPath is always the last diretory, never a file
 				// (because we call getDir)

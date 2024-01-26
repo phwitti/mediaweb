@@ -48,17 +48,17 @@ func (wa *WebAPI) Start() chan bool {
 	done := make(chan bool)
 
 	go func() {
-		log.Infof("Starting Web API on port %s\n", wa.server.Addr)
+		log.Info("Starting Web API on port ", wa.server.Addr)
 		if wa.tlsCertFile != "" && wa.tlsKeyFile != "" {
 			log.Info("Using TLS (HTTPS)")
 			if err := wa.server.ListenAndServeTLS(wa.tlsCertFile, wa.tlsKeyFile); err != nil {
 				// cannot panic, because this probably is an intentional close
-				log.Info("WebAPI: ListenAndServeTLS() shutdown reason:", err)
+				log.Info("WebAPI: ListenAndServeTLS() shutdown reason: ", err)
 			}
 		} else {
 			if err := wa.server.ListenAndServe(); err != nil {
 				// cannot panic, because this probably is an intentional close
-				log.Info("WebAPI: ListenAndServeTLS() shutdown reason:", err)
+				log.Info("WebAPI: ListenAndServeTLS() shutdown reason: ", err)
 			}
 		}
 		// TODO fix this wa.media.stopWatcher() // Stop the folder watcher (if it is running)
@@ -90,7 +90,7 @@ func (wa *WebAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Handle request
 	var head string
 	originalURL := r.URL.Path
-	log.Trace("Got request:", r.URL.Path)
+	log.Trace("Got request: ", r.URL.Path)
 	head, r.URL.Path = shiftPath(r.URL.Path)
 	if head == "shutdown" && r.Method == "POST" {
 		wa.Stop()
