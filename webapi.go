@@ -2,11 +2,9 @@ package main
 
 import (
 	"context"
-	_ "embed"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -121,15 +119,7 @@ func (wa *WebAPI) serveHTTPStatic(w http.ResponseWriter, r *http.Request) {
 		fileName = "index.html"
 	}
 
-	var bytes []byte
-	var err error = nil
-
-	if fileName == "index.html" {
-		bytes = embedIndexBytes
-	} else {
-		bytes, err = os.ReadFile(fileName)
-	}
-
+	bytes, err := embedStaticContent.ReadFile("templates/" + fileName)
 	if err != nil || len(bytes) == 0 {
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, "Unable to find: %s!", fileName)
