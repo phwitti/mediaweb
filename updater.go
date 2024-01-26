@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/midstar/llog"
+	log "github.com/sirupsen/logrus"
 )
 
 // mediaInterface is an interface representing the methods
@@ -13,11 +13,6 @@ import (
 type mediaInterface interface {
 	generateCache(relativePath string, recursive, thumbnails, preview bool) *PreCacheStatistics
 	isPreCacheInProgress() bool
-}
-
-// directory represents one directory
-type directory struct {
-	path string // path to directory
 }
 
 // Updater represents the updater
@@ -45,7 +40,7 @@ func createUpdater(media mediaInterface, thumbnails, preview bool) *Updater {
 }
 
 func (u *Updater) startUpdater() {
-	llog.Info("Starting updater")
+	log.Info("Starting updater")
 	go u.updaterThread()
 }
 
@@ -122,12 +117,12 @@ func (u *Updater) updaterThread() {
 			if !u.media.isPreCacheInProgress() {
 				path, ok := u.nextDirectoryToUpdate()
 				if ok {
-					llog.Info("Updating thumbs in %s", path)
+					log.Info("Updating thumbs in", path)
 					u.media.generateCache(path, false, u.thumbnails, u.preview)
 				}
 			}
 		case <-u.stopUpdaterChan:
-			llog.Info("Shutting down updater")
+			log.Info("Shutting down updater")
 			u.done <- true
 			return
 		}

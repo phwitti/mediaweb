@@ -1,6 +1,8 @@
 ﻿The MIT License (MIT)
 
-Copyright (c) Joel Midstjärna
+Copyright for portions of project phwitti/mediaweb are held by Joel Midstjärna,
+as part of project midstar/mediaweb. All other copyright for project
+phwitti/mediaweb are held by Philipp Wittershagen.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy 
 of this software and associated documentation files (the "Software"), to deal 

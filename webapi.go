@@ -2,15 +2,16 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
 
-	"github.com/GeertJohan/go.rice"
-	"github.com/midstar/llog"
+	log "github.com/sirupsen/logrus"
 )
 
 // WebAPI represents the REST API server.
@@ -18,7 +19,6 @@ type WebAPI struct {
 	server       *http.Server
 	templatePath string // Path to the templates
 	media        *Media
-	box          *rice.Box
 	userName     string // User name ("" means no authentication)
 	password     string // Password
 	tlsCertFile  string // TLS certification file ("" means no TLS)
@@ -26,7 +26,7 @@ type WebAPI struct {
 }
 
 // CreateWebAPI creates a new Web API instance
-func CreateWebAPI(port int, ip, templatePath string, media *Media, box *rice.Box, userName, password,
+func CreateWebAPI(port int, ip, templatePath string, media *Media, userName, password,
 	tlsCertFile, tlsKeyFile string) *WebAPI {
 	portStr := fmt.Sprintf("%s:%d", ip, port)
 	server := &http.Server{Addr: portStr}
@@ -34,7 +34,6 @@ func CreateWebAPI(port int, ip, templatePath string, media *Media, box *rice.Box
 		server:       server,
 		templatePath: templatePath,
 		media:        media,
-		box:          box,
 		userName:     userName,
 		password:     password,
 		tlsCertFile:  tlsCertFile,
@@ -49,17 +48,17 @@ func (wa *WebAPI) Start() chan bool {
 	done := make(chan bool)
 
 	go func() {
-		llog.Info("Starting Web API on port %s\n", wa.server.Addr)
+		log.Infof("Starting Web API on port %s\n", wa.server.Addr)
 		if wa.tlsCertFile != "" && wa.tlsKeyFile != "" {
-			llog.Info("Using TLS (HTTPS)")
+			log.Info("Using TLS (HTTPS)")
 			if err := wa.server.ListenAndServeTLS(wa.tlsCertFile, wa.tlsKeyFile); err != nil {
 				// cannot panic, because this probably is an intentional close
-				llog.Info("WebAPI: ListenAndServeTLS() shutdown reason: %s", err)
+				log.Info("WebAPI: ListenAndServeTLS() shutdown reason:", err)
 			}
 		} else {
 			if err := wa.server.ListenAndServe(); err != nil {
 				// cannot panic, because this probably is an intentional close
-				llog.Info("WebAPI: ListenAndServeTLS() shutdown reason: %s", err)
+				log.Info("WebAPI: ListenAndServeTLS() shutdown reason:", err)
 			}
 		}
 		// TODO fix this wa.media.stopWatcher() // Stop the folder watcher (if it is running)
@@ -81,7 +80,7 @@ func (wa *WebAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// Authentication required
 		user, pass, _ := r.BasicAuth()
 		if wa.userName != user || wa.password != pass {
-			llog.Info("Invalid user login attempt. user: %s, password: %s", user, pass)
+			log.Infof("Invalid user login attempt. user: %s, password: %s", user, pass)
 			w.Header().Set("WWW-Authenticate", "Basic realm=\"MediaWEB requires username and password\"")
 			http.Error(w, "Unauthorized. Invalid username or password.", http.StatusUnauthorized)
 			return
@@ -91,7 +90,7 @@ func (wa *WebAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Handle request
 	var head string
 	originalURL := r.URL.Path
-	llog.Trace("Got request: %s", r.URL.Path)
+	log.Trace("Got request:", r.URL.Path)
 	head, r.URL.Path = shiftPath(r.URL.Path)
 	if head == "shutdown" && r.Method == "POST" {
 		wa.Stop()
@@ -121,7 +120,16 @@ func (wa *WebAPI) serveHTTPStatic(w http.ResponseWriter, r *http.Request) {
 		// Default is index page
 		fileName = "index.html"
 	}
-	bytes, err := wa.box.Bytes(fileName)
+
+	var bytes []byte
+	var err error = nil
+
+	if fileName == "index.html" {
+		bytes = embedIndexBytes
+	} else {
+		bytes, err = os.ReadFile(fileName)
+	}
+
 	if err != nil || len(bytes) == 0 {
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, "Unable to find: %s!", fileName)
@@ -200,17 +208,14 @@ func (wa *WebAPI) serveHTTPThumbnail(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "image/png")
 		fileType := wa.media.getFileType(relativePath)
 		if fileType == "image" {
-			iconImage, _ := wa.box.Bytes("icon_image.png")
-			w.Write(iconImage)
+			w.Write(embedImageIconBytes)
 			//http.ServeFile(w, r, wa.templatePath+"/icon_image.png")
 		} else if fileType == "video" {
-			iconVideo, _ := wa.box.Bytes("icon_video.png")
-			w.Write(iconVideo)
+			w.Write(embedVideoIconBytes)
 			//http.ServeFile(w, r, wa.templatePath+"/icon_video.png")
 		} else {
 			// Folder
-			iconFolder, _ := wa.box.Bytes("icon_folder.png")
-			w.Write(iconFolder)
+			w.Write(embedFolderIconBytes)
 			//http.ServeFile(w, r, wa.templatePath+"/icon_folder.png")
 		}
 	}

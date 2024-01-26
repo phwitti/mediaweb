@@ -5,30 +5,30 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/midstar/gocfg"
-	"github.com/midstar/llog"
+	"github.com/go-ini/ini"
+	log "github.com/sirupsen/logrus"
 )
 
 type settings struct {
-	port                int        // Network port
-	ip                  string     // Network IP ("" means any)
-	mediaPath           string     // Top level path for media files
-	cachePath           string     // Top level path for cache (thumbs and preview)
-	enableThumbCache    bool       // Generate thumbnails
-	genThumbsOnStartup  bool       // Generate all thumbnails on startup
-	genThumbsOnAdd      bool       // Generate thumbnails when file added (start watcher)
-	autoRotate          bool       // Rotate JPEG files when needed
-	enablePreview       bool       // Generate preview files
-	previewMaxSide      int        // Max height/width of preview file
-	genPreviewOnStartup bool       // Generate all preview on startup
-	genPreviewOnAdd     bool       // Generate preview when file added (start watcher)
-	enableCacheCleanup  bool       // Clear cache from unnecessary files
-	logLevel            llog.Level // Logging level
-	logFile             string     // Log file ("" means stderr)
-	userName            string     // User name ("" means no authentication)
-	password            string     // Password
-	tlsCertFile         string     // TLS certification file
-	tlsKeyFile          string     // TLS key file
+	port                int       // Network port
+	ip                  string    // Network IP ("" means any)
+	mediaPath           string    // Top level path for media files
+	cachePath           string    // Top level path for cache (thumbs and preview)
+	enableThumbCache    bool      // Generate thumbnails
+	genThumbsOnStartup  bool      // Generate all thumbnails on startup
+	genThumbsOnAdd      bool      // Generate thumbnails when file added (start watcher)
+	autoRotate          bool      // Rotate JPEG files when needed
+	enablePreview       bool      // Generate preview files
+	previewMaxSide      int       // Max height/width of preview file
+	genPreviewOnStartup bool      // Generate all preview on startup
+	genPreviewOnAdd     bool      // Generate preview when file added (start watcher)
+	enableCacheCleanup  bool      // Clear cache from unnecessary files
+	logLevel            log.Level // Logging level
+	logFile             string    // Log file ("" means stderr)
+	userName            string    // User name ("" means no authentication)
+	password            string    // Password
+	tlsCertFile         string    // TLS certification file
+	tlsKeyFile          string    // TLS key file
 }
 
 // defaultConfPath holds configuration file paths in priority order
@@ -48,7 +48,7 @@ func findConfFile() string {
 		}
 	}
 	if result == "" {
-		llog.Panic("No configuration file found. Looked in %s", strings.Join(confPaths, ", "))
+		log.Panic("No configuration file found. Looked in", strings.Join(confPaths, ", "))
 	}
 	return result
 }
@@ -57,43 +57,48 @@ func findConfFile() string {
 // don't exist or if any of the mandatory settings don't exist.
 func loadSettings(fileName string) settings {
 	result := settings{}
-	llog.Info("Loading configuration: %s", fileName)
-	config, err := gocfg.LoadConfiguration(fileName)
+	log.Info("Loading configuration:", fileName)
+	config, err := ini.Load(fileName)
 	if err != nil {
-		llog.Panic("%s", err)
+		log.Panic(err)
+	}
+
+	section, err := config.GetSection("")
+	if err != nil {
+		log.Panic(err)
 	}
 
 	// Load port (MANDATORY)
-	if !config.HasKey("port") {
-		llog.Panic("Mandatory property 'port' is not defined in %s", fileName)
+	if !section.HasKey("port") {
+		log.Panic("Mandatory property 'port' is not defined in", fileName)
 	}
-	port, err := config.GetInt("port", 0)
+	port, err := section.Key("port").Int()
 	if err != nil {
-		llog.Panic("%s", err)
+		log.Panic(err)
 	}
 	result.port = port
 
 	// Load IP (OPTIONAL)
 	// Default: ""
-	ip := config.GetString("ip", "")
+	ip := section.Key("ip").MustString("")
 	result.ip = ip
 
 	// Load mediaPath (MANDATORY)
-	if !config.HasKey("mediapath") {
-		llog.Panic("Mandatory property 'mediapath' is not defined in %s", fileName)
+	if !section.HasKey("mediapath") {
+		log.Panic("Mandatory property 'mediapath' is not defined in", fileName)
 	}
-	mediaPath := config.GetString("mediapath", "")
+	mediaPath := section.Key("mediapath").MustString("")
 	result.mediaPath = mediaPath
 
 	// Load cachePath (OPTIONAL)
 	// Default: OS temp directory
-	if config.HasKey("cachepath") {
-		cachePath := config.GetString("cachepath", "")
+	if section.HasKey("cachepath") {
+		cachePath := section.Key("cachepath").MustString("")
 		result.cachePath = cachePath
 	} else {
 		// For backwards compatibility with old versions
-		if config.HasKey("thumbpath") {
-			cachePath := config.GetString("thumbpath", "")
+		if section.HasKey("thumbpath") {
+			cachePath := section.Key("thumbpath").MustString("")
 			result.cachePath = cachePath
 		} else {
 			// Use default temporary directory + mediaweb
@@ -104,132 +109,141 @@ func loadSettings(fileName string) settings {
 
 	// Check that mediapath and cachepath are not the same
 	if pathEquals(result.mediaPath, result.cachePath) {
-		llog.Panic("cachepath and mediapath have the same value '%s'", result.mediaPath)
+		log.Panicf("cachepath and mediapath have the same value '%s'", result.mediaPath)
 	}
 
 	// Load enableThumbCache (OPTIONAL)
 	// Default: true
-	enableThumbCache, err := config.GetBool("enablethumbcache", true)
+	enableThumbCache, err := section.Key("enablethumbcache").Bool()
 	if err != nil {
-		llog.Warn("%s", err)
+		enableThumbCache = true
+		log.Warn(err)
 	}
 	result.enableThumbCache = enableThumbCache
 
 	// Load genthumbsonstartup (OPTIONAL)
 	// Default: false
-	genThumbsOnStartup, err := config.GetBool("genthumbsonstartup", false)
+	genThumbsOnStartup, err := section.Key("genthumbsonstartup").Bool()
 	if err != nil {
-		llog.Warn("%s", err)
+		genThumbsOnStartup = false
+		log.Warn(err)
 	}
 	result.genThumbsOnStartup = genThumbsOnStartup
 
 	// Load genthumbsonadd (OPTIONAL)
 	// Default: true
-	genThumbsOnAdd, err := config.GetBool("genthumbsonadd", true)
+	genThumbsOnAdd, err := section.Key("genthumbsonadd").Bool()
 	if err != nil {
-		llog.Warn("%s", err)
+		genThumbsOnAdd = true
+		log.Warn(err)
 	}
 	result.genThumbsOnAdd = genThumbsOnAdd
 
 	// Load autoRotate (OPTIONAL)
 	// Default: true
-	autoRotate, err := config.GetBool("autorotate", true)
+	autoRotate, err := section.Key("autorotate").Bool()
 	if err != nil {
-		llog.Warn("%s", err)
+		autoRotate = true
+		log.Warn(err)
 	}
 	result.autoRotate = autoRotate
 
 	// Load enablePreview (OPTIONAL)
 	// Default: false
-	enablePreview, err := config.GetBool("enablepreview", false)
+	enablePreview, err := section.Key("enablepreview").Bool()
 	if err != nil {
-		llog.Warn("%s", err)
+		enablePreview = false
+		log.Warn(err)
 	}
 	result.enablePreview = enablePreview
 
 	// Load previewMaxSide (OPTIONAL)
 	// Default: 1280 (pixels)
-	previewMaxSide, err := config.GetInt("previewmaxside", 1280)
+	previewMaxSide, err := section.Key("previewmaxside").Int()
 	if err != nil {
-		llog.Warn("%s", err)
+		previewMaxSide = 1280
+		log.Warn(err)
 	}
 	result.previewMaxSide = previewMaxSide
 
 	// Load genpreviewonstartup (OPTIONAL)
 	// Default: false
-	genPreviewOnStartup, err := config.GetBool("genpreviewonstartup", false)
+	genPreviewOnStartup, err := section.Key("genpreviewonstartup").Bool()
 	if err != nil {
-		llog.Warn("%s", err)
+		genPreviewOnStartup = false
+		log.Warn(err)
 	}
 	result.genPreviewOnStartup = genPreviewOnStartup
 
 	// Load genpreviewonadd (OPTIONAL)
 	// Default: true
-	genPreviewOnAdd, err := config.GetBool("genpreviewonadd", true)
+	genPreviewOnAdd, err := section.Key("genpreviewonadd").Bool()
 	if err != nil {
-		llog.Warn("%s", err)
+		genPreviewOnAdd = true
+		log.Warn(err)
 	}
 	result.genPreviewOnAdd = genPreviewOnAdd
 
 	// Load enableCacheCleanup (OPTIONAL)
 	// Default: false
-	enableCacheCleanup, err := config.GetBool("enablecachecleanup", false)
+	enableCacheCleanup, err := section.Key("enablecachecleanup").Bool()
 	if err != nil {
-		llog.Warn("%s", err)
+		enableCacheCleanup = false
+		log.Warn(err)
 	}
 	result.enableCacheCleanup = enableCacheCleanup
 
 	// Load logFile (OPTIONAL)
 	// Default: "" (log to stderr)
-	logFile := config.GetString("logfile", "")
+	logFile := section.Key("logfile").MustString("")
 	result.logFile = logFile
 
 	// Load logLevel (OPTIONAL)
 	// Default: info
-	logLevel := config.GetString("loglevel", "info")
+	logLevel := section.Key("loglevel").MustString("info")
 	result.logLevel = toLogLvl(logLevel)
 
 	// Load username (OPTIONAL)
 	// Default: "" (no authentication)
-	userName := config.GetString("username", "")
+	userName := section.Key("username").MustString("")
 	result.userName = userName
 
 	// Load password (OPTIONAL)
 	// Default: ""
-	password := config.GetString("password", "")
+	password := section.Key("password").MustString("")
 	result.password = password
 
 	// Load tlsCertFile (OPTIONAL)
 	// Default: ""
-	tlsCertFile := config.GetString("tlscertfile", "")
+	tlsCertFile := section.Key("tlscertfile").MustString("")
 	result.tlsCertFile = tlsCertFile
 
 	// Load tlsKeyFile (OPTIONAL)
 	// Default: ""
-	tlsKeyFile := config.GetString("tlskeyfile", "")
+	tlsKeyFile := section.Key("tlskeyfile").MustString("")
 	result.tlsKeyFile = tlsKeyFile
 
 	return result
 }
 
-func toLogLvl(level string) llog.Level {
-	var logLevel llog.Level
+func toLogLvl(level string) log.Level {
+	var logLevel log.Level
 	switch level {
 	case "trace":
-		logLevel = llog.LvlTrace
+		logLevel = log.TraceLevel
 	case "debug":
-		logLevel = llog.LvlDebug
+		logLevel = log.DebugLevel
 	case "info":
-		logLevel = llog.LvlInfo
+		logLevel = log.InfoLevel
 	case "warn":
-		logLevel = llog.LvlWarn
+		logLevel = log.WarnLevel
 	case "error":
-		logLevel = llog.LvlError
+		logLevel = log.ErrorLevel
 	case "panic":
-		logLevel = llog.LvlPanic
+		logLevel = log.PanicLevel
 	default:
-		llog.Warn("Invalid loglevel '%s'. Using info level.", level)
-		logLevel = llog.LvlInfo
+		log.Warnf("Invalid loglevel '%s'. Using info level.", level)
+		logLevel = log.InfoLevel
 	}
 
 	return logLevel

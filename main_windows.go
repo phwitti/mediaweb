@@ -5,10 +5,8 @@ import (
 	"os"
 
 	"github.com/kardianos/service"
-	"github.com/midstar/llog"
+	log "github.com/sirupsen/logrus"
 )
-
-var logger service.Logger
 
 type program struct {
 	webAPI     *WebAPI
@@ -47,7 +45,7 @@ func main() {
 	prg := &program{workingDir: workingDir}
 	s, err := service.New(prg, svcConfig)
 	if err != nil {
-		llog.Panic("%s", err)
+		log.Panic(err)
 	}
 	s.Run()
 }

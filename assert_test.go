@@ -55,16 +55,6 @@ func assertEqualsBool(t *testing.T, message string, expected bool, actual bool) 
 	assertTrue(t, fmt.Sprintf("%s\nExpected: %t, Actual: %t", message, expected, actual), expected == actual)
 }
 
-func assertEqualsSlice(t *testing.T, message string, expected []uint32, actual []uint32) {
-	t.Helper()
-	assertEqualsInt(t, fmt.Sprintf("%s\nSize missmatch", message), len(expected), len(actual))
-	for index, expvalue := range expected {
-		actvalue := actual[index]
-		assertTrue(t, fmt.Sprintf("%s\nIndex %d - Expected: %d, Actual: %d", message, index, expvalue,
-			actvalue), expvalue == actvalue)
-	}
-}
-
 func assertFileExist(t *testing.T, message string, name string) {
 	t.Helper()
 	if _, err := os.Stat(name); err != nil {

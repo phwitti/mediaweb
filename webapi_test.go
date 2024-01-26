@@ -6,13 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"testing"
 	"time"
-
-	rice "github.com/GeertJohan/go.rice"
 )
 
 var baseURL = "http://localhost:9834"
@@ -60,7 +57,7 @@ func getBinary(t *testing.T, path, contentType string) []byte {
 	assertEqualsInt(t, "", int(http.StatusOK), int(resp.StatusCode))
 	assertEqualsStr(t, "", contentType, resp.Header.Get("content-type"))
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	assertExpectNoErr(t, "", err)
 	return body
 }
@@ -76,7 +73,7 @@ func getObject(t *testing.T, path string, v interface{}) {
 			path, resp.StatusCode, respToString(resp.Body))
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatalf("Unable to read body for %s. Reason: %s", path, err)
 	}
@@ -98,7 +95,7 @@ func waitserver(t *testing.T) {
 	client := http.Client{Timeout: 100 * time.Millisecond}
 	maxTries := 50
 	for i := 0; i < maxTries; i++ {
-		_, err := client.Get(fmt.Sprintf("%s", baseURL))
+		_, err := client.Get(baseURL)
 		if err == nil {
 			// Up and running :-)
 			return
@@ -222,9 +219,8 @@ func TestGetThumbnail(t *testing.T) {
 }
 
 func TestGetThumbnailNoCache(t *testing.T) {
-	box := rice.MustFindBox("templates")
-	media := createMedia(box, "testmedia", "", false, false, false, true, false, 0, false, false, false)
-	webAPI := CreateWebAPI(9834, "", "templates", media, box, "", "", "", "")
+	media := createMedia("testmedia", "", false, false, false, true, false, 0, false, false, false)
+	webAPI := CreateWebAPI(9834, "", "templates", media, "", "", "", "")
 	webAPI.Start()
 	waitserver(t)
 	defer shutdown(t)
@@ -254,9 +250,8 @@ func TestGetThumbnailNoCache(t *testing.T) {
 }
 
 func TestGetPreview(t *testing.T) {
-	box := rice.MustFindBox("templates")
-	media := createMedia(box, "testmedia", "tmpcache/TestGetPreview", true, false, false, true, true, 1280, false, false, false)
-	webAPI := CreateWebAPI(9834, "", "templates", media, box, "", "", "", "")
+	media := createMedia("testmedia", "tmpcache/TestGetPreview", true, false, false, true, true, 1280, false, false, false)
+	webAPI := CreateWebAPI(9834, "", "templates", media, "", "", "", "")
 	webAPI.Start()
 	waitserver(t)
 	defer shutdown(t)
@@ -281,9 +276,8 @@ func TestInvalidPath(t *testing.T) {
 }
 
 func TestAuthentication(t *testing.T) {
-	box := rice.MustFindBox("templates")
-	media := createMedia(box, "testmedia", "", true, false, false, true, false, 0, false, false, false)
-	webAPI := CreateWebAPI(9834, "", "templates", media, box, "myuser", "mypass", "", "")
+	media := createMedia("testmedia", "", true, false, false, true, false, 0, false, false, false)
+	webAPI := CreateWebAPI(9834, "", "templates", media, "myuser", "mypass", "", "")
 	webAPI.Start()
 	waitserver(t)
 	defer shutdown(t)
@@ -314,9 +308,8 @@ func TestAuthentication(t *testing.T) {
 }
 
 func TestIsPreCacheInProgress(t *testing.T) {
-	box := rice.MustFindBox("templates")
-	media := createMedia(box, "testmedia", "", false, false, false, true, false, 0, false, false, false)
-	webAPI := CreateWebAPI(9834, "", "templates", media, box, "", "", "", "")
+	media := createMedia("testmedia", "", false, false, false, true, false, 0, false, false, false)
+	webAPI := CreateWebAPI(9834, "", "templates", media, "", "", "", "")
 	webAPI.Start()
 	waitserver(t)
 	defer shutdown(t)
@@ -332,10 +325,8 @@ func TestIsPreCacheInProgress(t *testing.T) {
 }
 
 func TestTLS(t *testing.T) {
-	box := rice.MustFindBox("templates")
-	media := createMedia(box, "testmedia", "tmpcache/TestTLS", true, false, false, true, true, 1280, false, false, false)
-	webAPI := CreateWebAPI(9835, "", "templates", media, box, "", "",
-		"configs/example.crt", "configs/example.key")
+	media := createMedia("testmedia", "tmpcache/TestTLS", true, false, false, true, true, 1280, false, false, false)
+	webAPI := CreateWebAPI(9835, "", "templates", media, "", "", "configs/example.crt", "configs/example.key")
 	webAPI.Start()
 
 	// Create the client

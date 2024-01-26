@@ -2,12 +2,11 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/midstar/llog"
+	log "github.com/sirupsen/logrus"
 )
 
 // Watcher represents the watcher type
@@ -48,11 +47,11 @@ func (w *Watcher) stopWatcherAndWait() {
 // startWatcher identifies all folders within the mediaPath including
 // subfolders and starts the folder watcher go routine.
 func (w *Watcher) startWatcher() {
-	llog.Info("Starting media watcher")
+	log.Info("Starting media watcher")
 	w.updater.startUpdater()
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		llog.Error("Unable to watch for new media since: %s", err)
+		log.Error("Unable to watch for new media since:", err)
 		return
 	}
 
@@ -65,22 +64,23 @@ func (w *Watcher) startWatcher() {
 // sub folders (i.e. recursively).
 // The error return value is just for test purposes.
 func (w *Watcher) watchFolder(watcher *fsnotify.Watcher, path string) error {
-	llog.Debug("Watching folder: %s", path)
+	log.Debug("Watching folder:", path)
 	err := watcher.Add(path)
 	if err != nil {
-		llog.Error("Watch folder %s error: %s", path, err)
+		log.Errorf("Watch folder %s error: %s", path, err)
 	}
 	// Go through its subfolders and watch these
-	fileInfos, err := ioutil.ReadDir(path)
+	fileInfos, err := os.ReadDir(path)
 	if err != nil {
 		errMsg := fmt.Sprintf("Reading folder %s error: %s", path, err)
-		llog.Error(errMsg)
+		log.Error(errMsg)
 		return fmt.Errorf(errMsg)
 	}
 
-	for _, fileInfo := range fileInfos {
-		if fileInfo.IsDir() || fileInfo.Mode()&os.ModeSymlink != 0 {
-			w.watchFolder(watcher, filepath.Join(path, fileInfo.Name()))
+	for _, dirEntry := range fileInfos {
+		fileInfo, _ := dirEntry.Info()
+		if dirEntry.IsDir() || fileInfo.Mode()&os.ModeSymlink != 0 {
+			w.watchFolder(watcher, filepath.Join(path, dirEntry.Name()))
 		}
 	}
 	return nil
@@ -96,7 +96,7 @@ func (w *Watcher) mediaWatcher(watcher *fsnotify.Watcher) {
 		select {
 		case event, ok := <-watcher.Events:
 			if ok {
-				llog.Debug("Watcher event: %s", event)
+				log.Debug("Watcher event:", event)
 				path := event.Name
 				// relativeMediaPath is always the last diretory, never a file
 				// (because we call getDir)
@@ -127,10 +127,10 @@ func (w *Watcher) mediaWatcher(watcher *fsnotify.Watcher) {
 			}
 		case err, ok := <-watcher.Errors:
 			if ok {
-				llog.Warn("Watcher error: %s", err)
+				log.Warn("Watcher error:", err)
 			}
 		case <-w.stopWatcherChan:
-			llog.Info("Shutting down media watcher")
+			log.Info("Shutting down media watcher")
 			watcher.Close()
 			w.done <- true
 			return
@@ -140,7 +140,7 @@ func (w *Watcher) mediaWatcher(watcher *fsnotify.Watcher) {
 
 // isDir return true if the path is a directory
 func isDir(path string) bool {
-	_, err := ioutil.ReadDir(path)
+	_, err := os.ReadDir(path)
 	return err == nil
 }
 

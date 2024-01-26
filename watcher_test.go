@@ -1,23 +1,21 @@
 package main
 
 import (
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
 	"time"
 
-	rice "github.com/GeertJohan/go.rice"
 	"github.com/fsnotify/fsnotify"
 )
 
 func copyFile(t *testing.T, sourceFile, destinationFile string) {
 	t.Helper()
-	input, err := ioutil.ReadFile(sourceFile)
+	input, err := os.ReadFile(sourceFile)
 	assertExpectNoErr(t, "", err)
 
-	err = ioutil.WriteFile(destinationFile, input, 0644)
+	err = os.WriteFile(destinationFile, input, 0644)
 	assertExpectNoErr(t, "", err)
 }
 
@@ -85,8 +83,7 @@ func TestWatcherImages(t *testing.T) {
 	os.RemoveAll(cache)
 	os.MkdirAll(cache, os.ModePerm)
 
-	box := rice.MustFindBox("templates")
-	media := createMedia(box, mediaPath, cache, true, false, true, true, false, 0, false, false, true)
+	media := createMedia(mediaPath, cache, true, false, true, true, false, 0, false, false, true)
 	defer media.watcher.stopWatcherAndWait()
 
 	time.Sleep(100 * time.Millisecond) // Wait for watcher to start
@@ -135,8 +132,7 @@ func TestWatcherFileLocked(t *testing.T) {
 	os.RemoveAll(cache)
 	os.MkdirAll(cache, os.ModePerm)
 
-	box := rice.MustFindBox("templates")
-	media := createMedia(box, mediaPath, cache, true, false, true, true, false, 0, false, false, false)
+	media := createMedia(mediaPath, cache, true, false, true, true, false, 0, false, false, false)
 	defer media.watcher.stopWatcherAndWait()
 
 	time.Sleep(100 * time.Millisecond) // Wait for watcher to start
@@ -164,8 +160,7 @@ func TestWatcherSubfolder(t *testing.T) {
 	os.RemoveAll(cache)
 	os.MkdirAll(cache, os.ModePerm)
 
-	box := rice.MustFindBox("templates")
-	media := createMedia(box, mediaPath, cache, true, false, true, true, false, 0, false, false, true)
+	media := createMedia(mediaPath, cache, true, false, true, true, false, 0, false, false, true)
 	defer media.watcher.stopWatcherAndWait()
 
 	time.Sleep(100 * time.Millisecond) // Wait for watcher to start
@@ -209,8 +204,7 @@ func TestWatcherVideo(t *testing.T) {
 	os.RemoveAll(cache)
 	os.MkdirAll(cache, os.ModePerm)
 
-	box := rice.MustFindBox("templates")
-	media := createMedia(box, mediaPath, cache, true, false, true, true, false, 0, false, false, false)
+	media := createMedia(mediaPath, cache, true, false, true, true, false, 0, false, false, false)
 	defer media.watcher.stopWatcherAndWait()
 
 	if !media.videoThumbnailSupport() {
@@ -228,10 +222,9 @@ func TestWatcherVideo(t *testing.T) {
 }
 
 func TestWatchFolder(t *testing.T) {
-	box := rice.MustFindBox("templates")
 	// Don't start the watcher, so that we can test its internal
 	// functionality
-	media := createMedia(box, "testmedia", ".", true, false, false, true, false, 0, false, false, false)
+	media := createMedia("testmedia", ".", true, false, false, true, false, 0, false, false, false)
 
 	watcher, err := fsnotify.NewWatcher()
 	assertExpectNoErr(t, "", err)
