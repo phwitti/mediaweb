@@ -22,7 +22,7 @@ func mainCommon() *WebAPI {
 	log.Info("Build time: ", applicationBuildTime)
 	log.Info("Git hash: ", applicationGitHash)
 	media := createMedia(s.mediaPath, s.cachePath,
-		s.enableThumbCache, s.genThumbsOnStartup,
+		s.enableThumbCache, s.ignoreExifThumbs, s.genThumbsOnStartup,
 		s.genThumbsOnAdd, s.autoRotate, s.enablePreview, s.previewMaxSide,
 		s.genPreviewOnStartup, s.genPreviewOnAdd, s.enableCacheCleanup)
 	webAPI := CreateWebAPI(s.port, s.ip, "templates", media,

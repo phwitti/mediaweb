@@ -219,7 +219,7 @@ func TestGetThumbnail(t *testing.T) {
 }
 
 func TestGetThumbnailNoCache(t *testing.T) {
-	media := createMedia("testmedia", "", false, false, false, true, false, 0, false, false, false)
+	media := createMedia("testmedia", "", false, false, false, false, true, false, 0, false, false, false)
 	webAPI := CreateWebAPI(9834, "", "templates", media, "", "", "", "")
 	webAPI.Start()
 	waitserver(t)
@@ -250,7 +250,7 @@ func TestGetThumbnailNoCache(t *testing.T) {
 }
 
 func TestGetPreview(t *testing.T) {
-	media := createMedia("testmedia", "tmpcache/TestGetPreview", true, false, false, true, true, 1280, false, false, false)
+	media := createMedia("testmedia", "tmpcache/TestGetPreview", true, false, false, false, true, true, 1280, false, false, false)
 	webAPI := CreateWebAPI(9834, "", "templates", media, "", "", "", "")
 	webAPI.Start()
 	waitserver(t)
@@ -276,7 +276,7 @@ func TestInvalidPath(t *testing.T) {
 }
 
 func TestAuthentication(t *testing.T) {
-	media := createMedia("testmedia", "", true, false, false, true, false, 0, false, false, false)
+	media := createMedia("testmedia", "", true, false, false, false, true, false, 0, false, false, false)
 	webAPI := CreateWebAPI(9834, "", "templates", media, "myuser", "mypass", "", "")
 	webAPI.Start()
 	waitserver(t)
@@ -308,7 +308,7 @@ func TestAuthentication(t *testing.T) {
 }
 
 func TestIsPreCacheInProgress(t *testing.T) {
-	media := createMedia("testmedia", "", false, false, false, true, false, 0, false, false, false)
+	media := createMedia("testmedia", "", false, false, false, false, true, false, 0, false, false, false)
 	webAPI := CreateWebAPI(9834, "", "templates", media, "", "", "", "")
 	webAPI.Start()
 	waitserver(t)
@@ -325,7 +325,7 @@ func TestIsPreCacheInProgress(t *testing.T) {
 }
 
 func TestTLS(t *testing.T) {
-	media := createMedia("testmedia", "tmpcache/TestTLS", true, false, false, true, true, 1280, false, false, false)
+	media := createMedia("testmedia", "tmpcache/TestTLS", true, false, false, false, true, true, 1280, false, false, false)
 	webAPI := CreateWebAPI(9835, "", "templates", media, "", "", "configs/example.crt", "configs/example.key")
 	webAPI.Start()
 

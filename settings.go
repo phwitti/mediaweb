@@ -15,6 +15,7 @@ type settings struct {
 	mediaPath           string    // Top level path for media files
 	cachePath           string    // Top level path for cache (thumbs and preview)
 	enableThumbCache    bool      // Generate thumbnails
+	ignoreExifThumbs    bool      // Ignore embedded exif thumbnails
 	genThumbsOnStartup  bool      // Generate all thumbnails on startup
 	genThumbsOnAdd      bool      // Generate thumbnails when file added (start watcher)
 	autoRotate          bool      // Rotate JPEG files when needed
@@ -115,6 +116,10 @@ func loadSettings(fileName string) settings {
 	// Load enableThumbCache (OPTIONAL)
 	// Default: true
 	result.enableThumbCache = readOptionalBool(section, "enablethumbcache", true)
+
+	// Load ignoreExifThumbs (OPTIONAL)
+	// Default: false
+	result.ignoreExifThumbs = readOptionalBool(section, "ignoreexifthumbs", false)
 
 	// Load genthumbsonstartup (OPTIONAL)
 	// Default: false

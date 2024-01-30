@@ -25,6 +25,7 @@ type Media struct {
 	mediaPath          string   // Top level path for media files
 	cachepath          string   // Top level path for thumbnails
 	enableThumbCache   bool     // Generate thumbnails
+	ignoreExifThumbs   bool     // Ignore embedded exif thumbnails
 	autoRotate         bool     // Rotate JPEG files when needed
 	enablePreview      bool     // Resize images before provide to client
 	previewMaxSide     int      // Maximum width or hight of preview image
@@ -42,9 +43,9 @@ type File struct {
 
 // createMedia creates a new media. If thumb cache is enabled the path is
 // created when needed.
-func createMedia(mediaPath string, cachepath string, enableThumbCache,
-	genThumbsOnStartup, genThumbsOnAdd, autoRotate, enablePreview bool,
-	previewMaxSide int, genPreviewOnStartup, genPreviewOnAdd, enabledCacheCleanup bool) *Media {
+func createMedia(mediaPath string, cachepath string, enableThumbCache bool, ignoreExifThumbs bool,
+	genThumbsOnStartup bool, genThumbsOnAdd bool, autoRotate bool, enablePreview bool,
+	previewMaxSide int, genPreviewOnStartup bool, genPreviewOnAdd bool, enabledCacheCleanup bool) *Media {
 	log.Info("Media path: ", mediaPath)
 	if enableThumbCache || enablePreview {
 		directory := filepath.Dir(cachepath)
@@ -65,6 +66,7 @@ func createMedia(mediaPath string, cachepath string, enableThumbCache,
 	media := &Media{mediaPath: filepath.ToSlash(filepath.Clean(mediaPath)),
 		cachepath:          filepath.ToSlash(filepath.Clean(cachepath)),
 		enableThumbCache:   enableThumbCache,
+		ignoreExifThumbs:   ignoreExifThumbs,
 		autoRotate:         autoRotate,
 		enablePreview:      enablePreview,
 		previewMaxSide:     previewMaxSide,
@@ -461,7 +463,7 @@ func (m *Media) writeThumbnail(w io.Writer, relativeFilePath string) error {
 	if !m.isImage(relativeFilePath) && !m.isVideo(relativeFilePath) {
 		return fmt.Errorf("not a supported media type")
 	}
-	if m.writeEXIFThumbnail(w, relativeFilePath) == nil {
+	if !m.ignoreExifThumbs && m.writeEXIFThumbnail(w, relativeFilePath) == nil {
 		return nil
 	}
 	if !m.enableThumbCache {
@@ -802,13 +804,15 @@ func (m *Media) generateCache(relativePath string, recursive, thumbnails, previe
 			}
 			// Check if file has EXIF thumbnail
 			hasExifThumb := false
-			ex := m.extractEXIF(file.Path)
-			if ex != nil {
-				_, err := ex.JpegThumbnail()
-				if err == nil {
-					// Media has EXIF thumbnail
-					stat.NbrOfExif++
-					hasExifThumb = true
+			if !m.ignoreExifThumbs {
+				ex := m.extractEXIF(file.Path)
+				if ex != nil {
+					_, err := ex.JpegThumbnail()
+					if err == nil {
+						// Media has EXIF thumbnail
+						stat.NbrOfExif++
+						hasExifThumb = true
+					}
 				}
 			}
 			if thumbnails && !hasExifThumb {
