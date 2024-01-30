@@ -1,0 +1,11 @@
+[ ] Add option to generate album thumbs (genalbumthumbs)
+[ ] Implement generation of album thumbs (versions for [2,3,4,5,6+] images) and save them as .mediaweb.album.jpg
+[ ] Return album thumbs on request for that album
+
+[ ] Add option to generate super small preview (as base64) into database file for each album (gensmallthumbs)
+[ ] Generate super small preview and save into .mediaweb.smallthumbs.json for every album
+[ ] Add api access point for smallthumbs.json file
+[ ] Grab and use that file as first request and fill thumbnail-background images with these
+[ ] Add blur to css
+
+[ ] Rename thumbs/previews to XY.thumb.jpg and XY.preview.jpg
