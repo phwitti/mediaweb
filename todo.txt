@@ -1,3 +1,4 @@
+[ ] Process folders by first reading in all files names and then doing the rest in memory
 [ ] Add gogc (debug.SetGCPercent()) and memlimit (debug.SetMemoryLimit(x)) variables to conf
 [ ] Enable runtime.GC() to run after each image? (should probably attemt to "automate" that with the other two variables...)
 
