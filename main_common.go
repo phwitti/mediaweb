@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -28,4 +31,20 @@ func mainCommon() *WebAPI {
 	webAPI := CreateWebAPI(s.port, s.ip, "templates", media,
 		s.userName, s.password, s.tlsCertFile, s.tlsKeyFile)
 	return webAPI
+}
+
+// getFullPath returns the full path from an absolute base
+// path and a relative path. Returns error on security hacks,
+// i.e. when someone tries to access ../../../ for example to
+// get files that are not within configured base path.
+//
+// Always returning front slashes / as path separator
+func getFullPath(basePath, relativePath string) (string, error) {
+	fullPath := filepath.ToSlash(filepath.Join(basePath, relativePath))
+	diffPath, err := filepath.Rel(basePath, fullPath)
+	diffPath = filepath.ToSlash(diffPath)
+	if err != nil || strings.HasPrefix(diffPath, "../") {
+		return basePath, fmt.Errorf("hacker attack, someone tries to access: %s", fullPath)
+	}
+	return fullPath, nil
 }

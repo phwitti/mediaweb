@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	_ "embed"
 	"fmt"
 	"image"
 	"io"
@@ -83,32 +82,16 @@ func createMedia(mediaPath string, cachepath string, enableThumbCache bool, igno
 	return media
 }
 
-// getFullPath returns the full path from an absolute base
-// path and a relative path. Returns error on security hacks,
-// i.e. when someone tries to access ../../../ for example to
-// get files that are not within configured base path.
-//
-// Always returning front slashes / as path separator
-func (m *Media) getFullPath(basePath, relativePath string) (string, error) {
-	fullPath := filepath.ToSlash(filepath.Join(basePath, relativePath))
-	diffPath, err := filepath.Rel(basePath, fullPath)
-	diffPath = filepath.ToSlash(diffPath)
-	if err != nil || strings.HasPrefix(diffPath, "../") {
-		return m.mediaPath, fmt.Errorf("hacker attack, someone tries to access: %s", fullPath)
-	}
-	return fullPath, nil
-}
-
 // getFullMediaPath returns the full path of the provided path, i.e:
 // media path + relative path.
 func (m *Media) getFullMediaPath(relativePath string) (string, error) {
-	return m.getFullPath(m.mediaPath, relativePath)
+	return getFullPath(m.mediaPath, relativePath)
 }
 
 // getFullCachePath returns the full path of the provided path, i.e:
 // thumb path + relative path.
 func (m *Media) getFullCachePath(relativePath string) (string, error) {
-	return m.getFullPath(m.cachepath, relativePath)
+	return getFullPath(m.cachepath, relativePath)
 }
 
 // getRelativePath returns the relative path from an absolute base
@@ -344,15 +327,12 @@ func (m *Media) writeEXIFThumbnail(w io.Writer, relativeFilePath string) error {
 // Returns error if the media path is invalid.
 func (m *Media) thumbnailPath(relativeMediaPath string) (string, error) {
 	path, file := filepath.Split(relativeMediaPath)
-	if !m.isJPEG(file) {
-		// Replace extension with .jpg
-		ext := filepath.Ext(file)
-		if ext == "" {
-			return "", fmt.Errorf("File has no extension: %s", file)
-		}
-		file = strings.Replace(file, ext, ".jpg", -1)
+	// Replace extension with .thumb.jpg
+	ext := filepath.Ext(file)
+	if ext == "" {
+		return "", fmt.Errorf("File has no extension: %s", file)
 	}
-	file = "_" + file
+	file = strings.Replace(file, ext, ".thumb.jpg", -1)
 	relativeThumbnailPath := filepath.Join(path, file)
 	return m.getFullCachePath(relativeThumbnailPath)
 }
@@ -612,15 +592,12 @@ func (m *Media) getImageWidthAndHeight(fullMediaPath string) (int, int, error) {
 // Returns error if the media path is invalid.
 func (m *Media) previewPath(relativeMediaPath string) (string, error) {
 	path, file := filepath.Split(relativeMediaPath)
-	if !m.isJPEG(file) {
-		// Replace extension with .jpg
-		ext := filepath.Ext(file)
-		if ext == "" {
-			return "", fmt.Errorf("file has no extension: %s", file)
-		}
-		file = strings.Replace(file, ext, ".jpg", -1)
+	// Replace extension with .preview.jpg
+	ext := filepath.Ext(file)
+	if ext == "" {
+		return "", fmt.Errorf("file has no extension: %s", file)
 	}
-	file = "view_" + file
+	file = strings.Replace(file, ext, ".preview.jpg", -1)
 	relativePreviewPath := filepath.Join(path, file)
 	return m.getFullCachePath(relativePreviewPath)
 }
