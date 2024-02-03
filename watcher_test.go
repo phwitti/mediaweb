@@ -207,7 +207,7 @@ func TestWatcherVideo(t *testing.T) {
 	media := createMedia(mediaPath, cache, true, false, false, true, true, false, 0, false, false, false)
 	defer media.watcher.stopWatcherAndWait()
 
-	if !media.videoThumbnailSupport() {
+	if !hasVideoThumbnailSupport() {
 		t.Skip("ffmpeg not installed skipping test")
 		return
 	}

@@ -153,7 +153,7 @@ func (wa *WebAPI) serveHTTPFolder(w http.ResponseWriter, r *http.Request) {
 func (wa *WebAPI) serveHTTPMedia(w http.ResponseWriter, r *http.Request) {
 	relativePath := r.URL.Path
 	// Only accept media files of security reasons
-	if wa.media.getFileType(relativePath) == "" {
+	if getFileType(relativePath) == "" {
 		http.Error(w, "Not a valid media file: "+relativePath, http.StatusNotFound)
 		return
 	}
@@ -196,7 +196,7 @@ func (wa *WebAPI) serveHTTPThumbnail(w http.ResponseWriter, r *http.Request) {
 	} else {
 		// No thumbnail. Use the default
 		w.Header().Set("Content-Type", "image/png")
-		fileType := wa.media.getFileType(relativePath)
+		fileType := getFileType(relativePath)
 		if fileType == "image" {
 			w.Write(embedImageIconBytes)
 			//http.ServeFile(w, r, wa.templatePath+"/icon_image.png")

@@ -245,22 +245,22 @@ func TestRelativePath(t *testing.T) {
 func TestThumbnailPath(t *testing.T) {
 	media := createMedia("/c/mediapath", "/d/thumbpath", true, false, false, false, true, false, 0, false, false, false)
 
-	thumbPath, err := media.thumbnailPath("myimage.jpg")
+	thumbPath, err := media.cache.thumbnailPath("myimage.jpg")
 	assertExpectNoErr(t, "", err)
 	assertEqualsStr(t, "", "/d/thumbpath/_myimage.jpg", thumbPath)
 
-	thumbPath, err = media.thumbnailPath("subdrive/myimage.jpg")
+	thumbPath, err = media.cache.thumbnailPath("subdrive/myimage.jpg")
 	assertExpectNoErr(t, "", err)
 	assertEqualsStr(t, "", "/d/thumbpath/subdrive/_myimage.jpg", thumbPath)
 
-	thumbPath, err = media.thumbnailPath("subdrive/myimage.png")
+	thumbPath, err = media.cache.thumbnailPath("subdrive/myimage.png")
 	assertExpectNoErr(t, "", err)
 	assertEqualsStr(t, "", "/d/thumbpath/subdrive/_myimage.jpg", thumbPath)
 
-	_, err = media.thumbnailPath("subdrive/myimage")
+	_, err = media.cache.thumbnailPath("subdrive/myimage")
 	assertExpectErr(t, "", err)
 
-	_, err = media.thumbnailPath("subdrive/../../hacker")
+	_, err = media.cache.thumbnailPath("subdrive/../../hacker")
 	assertExpectErr(t, "", err)
 }
 
@@ -268,7 +268,7 @@ func tGenerateImageThumbnail(t *testing.T, media *Media, inFileName, outFileName
 	t.Helper()
 	os.Remove(outFileName)
 	RestartTimer()
-	err := media.generateImageThumbnail(inFileName, outFileName)
+	err := media.cache.generateImageThumbnail(inFileName, outFileName)
 	LogTime(t, inFileName+" thumbnail generation: ")
 	assertExpectNoErr(t, "", err)
 	assertFileExist(t, "", outFileName)
@@ -288,10 +288,10 @@ func TestGenerateImageThumbnail(t *testing.T) {
 	tGenerateImageThumbnail(t, media, "testmedia/exif_rotate/no_exif.jpg", "tmpout/TestGenerateImageThumbnail/exif_rotate/no_exif.jpg")
 
 	// Test some invalid
-	err := media.generateImageThumbnail("nonexisting.png", "dont_matter.png")
+	err := media.cache.generateImageThumbnail("nonexisting.png", "dont_matter.png")
 	assertExpectErr(t, "", err)
 
-	err = media.generateImageThumbnail("testmedia/invalid.jpg", "dont_matter.jpg")
+	err = media.cache.generateImageThumbnail("testmedia/invalid.jpg", "dont_matter.jpg")
 	assertExpectErr(t, "", err)
 }
 
@@ -328,7 +328,7 @@ func TestWriteThumbnail(t *testing.T) {
 	tWriteThumbnail(t, media, "png.png", "tmpout/TestWriteThumbnail/png.jpg", false)
 
 	// Video - only if video is supported
-	if media.videoThumbnailSupport() {
+	if hasVideoThumbnailSupport() {
 		tWriteThumbnail(t, media, "video.mp4", "tmpout/TestWriteThumbnail/video.jpg", false)
 
 		// Test invalid
@@ -365,18 +365,16 @@ func TestVideoThumbnailSupport(t *testing.T) {
 		ffmpegCmd = origCmd
 	}()
 
-	media := createMedia("testmedia", ".", true, false, false, false, true, false, 0, false, false, false)
-
-	t.Logf("ffmpeg supported: %v", media.videoThumbnailSupport())
+	t.Logf("ffmpeg supported: %v", hasVideoThumbnailSupport())
 
 	ffmpegCmd = "thiscommanddontexit"
-	assertFalse(t, ffmpegCmd, media.videoThumbnailSupport())
+	assertFalse(t, ffmpegCmd, hasVideoThumbnailSupport())
 
 	ffmpegCmd = "cmd"
-	shallBeTrueOnWindows := media.videoThumbnailSupport()
+	shallBeTrueOnWindows := hasVideoThumbnailSupport()
 
 	ffmpegCmd = "echo"
-	shallBeTrueOnNonWindows := media.videoThumbnailSupport()
+	shallBeTrueOnNonWindows := hasVideoThumbnailSupport()
 
 	assertTrue(t, "Shall be true on at least one platform", shallBeTrueOnWindows || shallBeTrueOnNonWindows)
 }
@@ -385,7 +383,7 @@ func tGenerateVideoThumbnail(t *testing.T, media *Media, inFileName, outFileName
 	t.Helper()
 	os.Remove(outFileName)
 	RestartTimer()
-	err := media.generateVideoThumbnail(inFileName, outFileName)
+	err := media.cache.generateVideoThumbnail(inFileName, outFileName)
 	LogTime(t, inFileName+"thumbnail generation: ")
 	assertExpectNoErr(t, "", err)
 	assertFileExist(t, "", outFileName)
@@ -394,7 +392,7 @@ func tGenerateVideoThumbnail(t *testing.T, media *Media, inFileName, outFileName
 
 func TestGenerateVideoThumbnail(t *testing.T) {
 	media := createMedia("testmedia", ".", true, false, false, false, true, false, 0, false, false, false)
-	if !media.videoThumbnailSupport() {
+	if !hasVideoThumbnailSupport() {
 		t.Skip("ffmpeg not installed skipping test")
 		return
 	}
@@ -407,9 +405,9 @@ func TestGenerateVideoThumbnail(t *testing.T) {
 	tGenerateVideoThumbnail(t, media, "testmedia/video.mp4", tmpSpace+"/video_thumbnail.jpg")
 
 	// Test some invalid
-	err := media.generateVideoThumbnail("nonexisting.mp4", tmp+"dont_matter.jpg")
+	err := media.cache.generateVideoThumbnail("nonexisting.mp4", tmp+"dont_matter.jpg")
 	assertExpectErr(t, "", err)
-	err = media.generateVideoThumbnail("invalidvideo.mp4", tmp+"/invalidvideo.jpg")
+	err = media.cache.generateVideoThumbnail("invalidvideo.mp4", tmp+"/invalidvideo.jpg")
 	assertExpectErr(t, "", err)
 }
 
@@ -431,7 +429,7 @@ func TestGenerateThumbnails(t *testing.T) {
 	assertEqualsInt(t, "", 0, stat.NbrOfFailedImagePreview)
 	assertEqualsInt(t, "", 0, stat.NbrOfSmallImages)
 	assertEqualsInt(t, "", 0, stat.NbrRemovedCacheFiles)
-	if media.videoThumbnailSupport() {
+	if hasVideoThumbnailSupport() {
 		assertEqualsInt(t, "", 1, stat.NbrOfVideoThumb)
 		assertEqualsInt(t, "", 1, stat.NbrOfFailedVideoThumb)
 		assertFileExist(t, "", filepath.Join(cache, "_video.jpg"))
@@ -567,7 +565,7 @@ func TestGenerateAllThumbnails(t *testing.T) {
 	assertFileNotExist(t, "", filepath.Join(cache, "exif_rotate", "_180deg.jpg"))
 	assertFileNotExist(t, "", filepath.Join(cache, "exif_rotate", "_mirror.jpg"))
 
-	if media.videoThumbnailSupport() {
+	if hasVideoThumbnailSupport() {
 		assertFileExist(t, "", filepath.Join(cache, "_video.jpg"))
 	}
 }
@@ -683,22 +681,22 @@ func TestGetImageWidthAndHeight(t *testing.T) {
 func TestPreviewPath(t *testing.T) {
 	media := createMedia("/c/mediapath", "/d/thumbpath", true, false, false, false, true, true, 1280, false, false, false)
 
-	previewPath, err := media.previewPath("myimage.jpg")
+	previewPath, err := media.cache.previewPath("myimage.jpg")
 	assertExpectNoErr(t, "", err)
 	assertEqualsStr(t, "", "/d/thumbpath/view_myimage.jpg", previewPath)
 
-	previewPath, err = media.previewPath("subdrive/myimage.jpg")
+	previewPath, err = media.cache.previewPath("subdrive/myimage.jpg")
 	assertExpectNoErr(t, "", err)
 	assertEqualsStr(t, "", "/d/thumbpath/subdrive/view_myimage.jpg", previewPath)
 
-	previewPath, err = media.previewPath("subdrive/myimage.png")
+	previewPath, err = media.cache.previewPath("subdrive/myimage.png")
 	assertExpectNoErr(t, "", err)
 	assertEqualsStr(t, "", "/d/thumbpath/subdrive/view_myimage.jpg", previewPath)
 
-	_, err = media.previewPath("subdrive/myimage")
+	_, err = media.cache.previewPath("subdrive/myimage")
 	assertExpectErr(t, "", err)
 
-	_, err = media.previewPath("subdrive/../../hacker")
+	_, err = media.cache.previewPath("subdrive/../../hacker")
 	assertExpectErr(t, "", err)
 }
 
@@ -706,7 +704,7 @@ func tGenerateImagePreview(t *testing.T, media *Media, inFileName, outFileName s
 	t.Helper()
 	os.Remove(outFileName)
 	RestartTimer()
-	err := media.generateImagePreview(inFileName, outFileName)
+	err := media.cache.generateImagePreview(inFileName, outFileName)
 	LogTime(t, inFileName+" preview generation: ")
 	assertExpectNoErr(t, "", err)
 	assertFileExist(t, "", outFileName)
@@ -730,10 +728,10 @@ func TestGenerateImagePreview(t *testing.T) {
 	tGenerateImagePreview(t, media, "testmedia/exif_rotate/no_exif.jpg", "tmpout/TestGenerateImagePreview/exif_rotate/no_exif_preview.jpg")
 
 	// Test some invalid
-	err := media.generateImagePreview("nonexisting.png", "dont_matter.png")
+	err := media.cache.generateImagePreview("nonexisting.png", "dont_matter.png")
 	assertExpectErr(t, "", err)
 
-	err = media.generateImagePreview("testmedia/invalid.jpg", "dont_matter.jpg")
+	err = media.cache.generateImagePreview("testmedia/invalid.jpg", "dont_matter.jpg")
 	assertExpectErr(t, "", err)
 }
 
