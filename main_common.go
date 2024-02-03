@@ -27,7 +27,8 @@ func mainCommon() *WebAPI {
 	media := createMedia(s.mediaPath, s.cachePath,
 		s.enableThumbCache, s.ignoreExifThumbs, s.genThumbsOnStartup,
 		s.genThumbsOnAdd, s.autoRotate, s.enablePreview, s.previewMaxSide,
-		s.genPreviewOnStartup, s.genPreviewOnAdd, s.enableCacheCleanup)
+		s.genPreviewForSmallImages, s.genPreviewOnStartup, s.genPreviewOnAdd,
+		s.enableCacheCleanup)
 	webAPI := CreateWebAPI(s.port, s.ip, "templates", media,
 		s.userName, s.password, s.tlsCertFile, s.tlsKeyFile)
 	return webAPI

@@ -21,12 +21,10 @@ var vidExtensions = [...]string{".avi", ".mov", ".vid", ".mkv", ".mp4"}
 // Media represents the media including its base path
 type Media struct {
 	mediaPath          string // Top level path for media files
-	cachepath          string // Top level path for thumbnails
 	enableThumbCache   bool   // Generate thumbnails
 	ignoreExifThumbs   bool   // Ignore embedded exif thumbnails
 	autoRotate         bool   // Rotate JPEG files when needed
 	enablePreview      bool   // Resize images before provide to client
-	previewMaxSide     int    // Maximum width or hight of preview image
 	enableCacheCleanup bool   // Enable cleanup of cache area
 	preCacheInProgress bool   // True if thumbnail/preview generation in progress
 	cache              *Cache
@@ -44,7 +42,8 @@ type File struct {
 // created when needed.
 func createMedia(mediaPath string, cachepath string, enableThumbCache bool, ignoreExifThumbs bool,
 	genThumbsOnStartup bool, genThumbsOnAdd bool, autoRotate bool, enablePreview bool,
-	previewMaxSide int, genPreviewOnStartup bool, genPreviewOnAdd bool, enabledCacheCleanup bool) *Media {
+	previewMaxSide int, genPreviewForSmallImages bool, genPreviewOnStartup bool,
+	genPreviewOnAdd bool, enabledCacheCleanup bool) *Media {
 	log.Info("Media path: ", mediaPath)
 	if enableThumbCache || enablePreview {
 		directory := filepath.Dir(cachepath)
@@ -63,17 +62,16 @@ func createMedia(mediaPath string, cachepath string, enableThumbCache bool, igno
 	log.Info("JPEG auto rotate: ", autoRotate)
 	log.Infof("Image preview: %t  (max width/height %d px)", enablePreview, previewMaxSide)
 	media := &Media{mediaPath: filepath.ToSlash(filepath.Clean(mediaPath)),
-		cachepath:          filepath.ToSlash(filepath.Clean(cachepath)),
 		enableThumbCache:   enableThumbCache,
 		ignoreExifThumbs:   ignoreExifThumbs,
 		autoRotate:         autoRotate,
 		enablePreview:      enablePreview,
-		previewMaxSide:     previewMaxSide,
 		enableCacheCleanup: enabledCacheCleanup,
 		preCacheInProgress: false}
 	log.Info("Video thumbnails supported (ffmpeg installed): ", hasVideoThumbnailSupport())
 	if enableThumbCache || enablePreview {
-		media.cache = createCache(media)
+		cachepath := filepath.ToSlash(filepath.Clean(cachepath))
+		media.cache = createCache(media, cachepath, previewMaxSide, genPreviewForSmallImages)
 	}
 	if enableThumbCache && genThumbsOnStartup || enablePreview && genPreviewOnStartup {
 		go media.generateAllCache(enableThumbCache && genThumbsOnStartup, enablePreview && genPreviewOnStartup)

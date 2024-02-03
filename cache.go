@@ -16,14 +16,20 @@ import (
 
 // Cache keeps information about all known cache items
 type Cache struct {
-	cachepath      string // Top level path for thumbnails and previews
-	previewMaxSide int
-	thumbnails     map[string]time.Time // Key: relativePath of thumbnail to cachepath, Value: time of last update
-	previews       map[string]time.Time // Key: relativePath of preview to cachepath, Value: time of last update
+	cachepath                string // Top level path for thumbnails and previews
+	previewMaxSide           int
+	genPreviewForSmallImages bool
+	thumbnails               map[string]time.Time // Key: relativePath of thumbnail to cachepath, Value: time of last update
+	previews                 map[string]time.Time // Key: relativePath of preview to cachepath, Value: time of last update
 }
 
-func createCache(m *Media) *Cache {
-	c := &Cache{cachepath: m.cachepath, previewMaxSide: m.previewMaxSide}
+func createCache(m *Media, cachepath string, previewMaxSide int, genPreviewForSmallImages bool) *Cache {
+	c := &Cache{
+		cachepath:                cachepath,
+		previewMaxSide:           previewMaxSide,
+		genPreviewForSmallImages: genPreviewForSmallImages,
+		thumbnails:               map[string]time.Time{},
+		previews:                 map[string]time.Time{}}
 	c.loadCache("", true)
 	return c
 }
@@ -54,12 +60,24 @@ func (c *Cache) loadCache(relativePath string, recursive bool) {
 	}
 }
 
-func (d *Cache) hasThumbnail(fullPath string) bool {
-	return false
+func (c *Cache) hasThumbnail(fullPath string) bool {
+	path, err := c.relativeThumbnailPath(fullPath)
+	if err != nil {
+		log.Warn(err)
+		return false
+	}
+	_, ok := c.thumbnails[path]
+	return ok
 }
 
-func (d *Cache) hasPreview(fullPath string) bool {
-	return false
+func (c *Cache) hasPreview(fullPath string) bool {
+	path, err := c.relativePreviewPath(fullPath)
+	if err != nil {
+		log.Warn(err)
+		return false
+	}
+	_, ok := c.previews[path]
+	return ok
 }
 
 // getFullCachePath returns the full path of the provided path, i.e:
@@ -73,6 +91,14 @@ func (c *Cache) getFullCachePath(relativePath string) (string, error) {
 // extension) and starts with '_'.
 // Returns error if the media path is invalid.
 func (c *Cache) thumbnailPath(relativeMediaPath string) (string, error) {
+	relativePath, err := c.relativeThumbnailPath(relativeMediaPath)
+	if err != nil {
+		return "", err
+	}
+	return c.getFullCachePath(relativePath)
+}
+
+func (c *Cache) relativeThumbnailPath(relativeMediaPath string) (string, error) {
 	path, file := filepath.Split(relativeMediaPath)
 	// Replace extension with .thumb.jpg
 	ext := filepath.Ext(file)
@@ -80,8 +106,7 @@ func (c *Cache) thumbnailPath(relativeMediaPath string) (string, error) {
 		return "", fmt.Errorf("File has no extension: %s", file)
 	}
 	file = strings.Replace(file, ext, ".thumb.jpg", -1)
-	relativeThumbnailPath := filepath.Join(path, file)
-	return c.getFullCachePath(relativeThumbnailPath)
+	return filepath.ToSlash(filepath.Join(path, file)), nil
 }
 
 // previewPath returns the absolute preview file path from a
@@ -89,6 +114,14 @@ func (c *Cache) thumbnailPath(relativeMediaPath string) (string, error) {
 // extension) and starts with 'view_'.
 // Returns error if the media path is invalid.
 func (c *Cache) previewPath(relativeMediaPath string) (string, error) {
+	relativePath, err := c.relativePreviewPath(relativeMediaPath)
+	if err != nil {
+		return "", err
+	}
+	return c.getFullCachePath(relativePath)
+}
+
+func (c *Cache) relativePreviewPath(relativeMediaPath string) (string, error) {
 	path, file := filepath.Split(relativeMediaPath)
 	// Replace extension with .preview.jpg
 	ext := filepath.Ext(file)
@@ -96,8 +129,7 @@ func (c *Cache) previewPath(relativeMediaPath string) (string, error) {
 		return "", fmt.Errorf("file has no extension: %s", file)
 	}
 	file = strings.Replace(file, ext, ".preview.jpg", -1)
-	relativePreviewPath := filepath.Join(path, file)
-	return c.getFullCachePath(relativePreviewPath)
+	return filepath.ToSlash(filepath.Join(path, file)), nil
 }
 
 // errorIndicationPath returns the file path with the extension
@@ -191,7 +223,8 @@ func (c *Cache) generatePreview(m *Media, relativeFilePath string) (string, bool
 		c.generateErrorIndicationFile(errorIndicationFile, err)
 		return "", false, err
 	}
-	if width <= c.previewMaxSide && height <= c.previewMaxSide {
+
+	if !c.genPreviewForSmallImages && width <= c.previewMaxSide && height <= c.previewMaxSide {
 		msg := fmt.Sprintf("Image %s too small to generate preview", relativeFilePath)
 		log.Trace(msg)
 		return "", true, fmt.Errorf(msg)

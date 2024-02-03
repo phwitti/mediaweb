@@ -10,26 +10,27 @@ import (
 )
 
 type settings struct {
-	port                int       // Network port
-	ip                  string    // Network IP ("" means any)
-	mediaPath           string    // Top level path for media files
-	cachePath           string    // Top level path for cache (thumbs and preview)
-	enableThumbCache    bool      // Generate thumbnails
-	ignoreExifThumbs    bool      // Ignore embedded exif thumbnails
-	genThumbsOnStartup  bool      // Generate all thumbnails on startup
-	genThumbsOnAdd      bool      // Generate thumbnails when file added (start watcher)
-	autoRotate          bool      // Rotate JPEG files when needed
-	enablePreview       bool      // Generate preview files
-	previewMaxSide      int       // Max height/width of preview file
-	genPreviewOnStartup bool      // Generate all preview on startup
-	genPreviewOnAdd     bool      // Generate preview when file added (start watcher)
-	enableCacheCleanup  bool      // Clear cache from unnecessary files
-	logLevel            log.Level // Logging level
-	logFile             string    // Log file ("" means stderr)
-	userName            string    // User name ("" means no authentication)
-	password            string    // Password
-	tlsCertFile         string    // TLS certification file
-	tlsKeyFile          string    // TLS key file
+	port                     int       // Network port
+	ip                       string    // Network IP ("" means any)
+	mediaPath                string    // Top level path for media files
+	cachePath                string    // Top level path for cache (thumbs and preview)
+	enableThumbCache         bool      // Generate thumbnails
+	ignoreExifThumbs         bool      // Ignore embedded exif thumbnails
+	genThumbsOnStartup       bool      // Generate all thumbnails on startup
+	genThumbsOnAdd           bool      // Generate thumbnails when file added (start watcher)
+	autoRotate               bool      // Rotate JPEG files when needed
+	enablePreview            bool      // Generate preview files
+	previewMaxSide           int       // Max height/width of preview file
+	genPreviewForSmallImages bool      // Generate preview files also for images smaller then previewMaxSide
+	genPreviewOnStartup      bool      // Generate all preview on startup
+	genPreviewOnAdd          bool      // Generate preview when file added (start watcher)
+	enableCacheCleanup       bool      // Clear cache from unnecessary files
+	logLevel                 log.Level // Logging level
+	logFile                  string    // Log file ("" means stderr)
+	userName                 string    // User name ("" means no authentication)
+	password                 string    // Password
+	tlsCertFile              string    // TLS certification file
+	tlsKeyFile               string    // TLS key file
 }
 
 // defaultConfPath holds configuration file paths in priority order
@@ -140,6 +141,10 @@ func loadSettings(fileName string) settings {
 	// Load previewMaxSide (OPTIONAL)
 	// Default: 1280 (pixels)
 	result.previewMaxSide = readOptionalInt(section, "previewmaxside", 1280)
+
+	// Load genPreviewForSmallImages (OPTIONAL)
+	// Default: false
+	result.genPreviewForSmallImages = readOptionalBool(section, "genpreviewforsmallimages", false)
 
 	// Load genpreviewonstartup (OPTIONAL)
 	// Default: false

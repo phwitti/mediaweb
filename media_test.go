@@ -28,28 +28,28 @@ func LogTime(t *testing.T, whatWasMeasured string) {
 }
 
 func TestGetFiles(t *testing.T) {
-	media := createMedia("testmedia", ".", true, false, false, false, true, false, 0, false, false, false)
+	media := createMedia("testmedia", ".", true, false, false, false, true, false, 0, false, false, false, false)
 	files, err := media.getFiles("")
 	assertExpectNoErr(t, "", err)
 	assertTrue(t, "No files found", len(files) > 5)
 }
 
 func TestGetFilesInvalid(t *testing.T) {
-	media := createMedia("testmedia", ".", true, false, false, false, true, false, 0, false, false, false)
+	media := createMedia("testmedia", ".", true, false, false, false, true, false, 0, false, false, false, false)
 	files, err := media.getFiles("invalidfolder")
 	assertExpectErr(t, "invalid path shall give errors", err)
 	assertTrue(t, "Should not find any files", len(files) == 0)
 }
 
 func TestGetFilesHacker(t *testing.T) {
-	media := createMedia("testmedia", ".", true, false, false, false, true, false, 0, false, false, false)
+	media := createMedia("testmedia", ".", true, false, false, false, true, false, 0, false, false, false, false)
 	files, err := media.getFiles("../..")
 	assertExpectErr(t, "hacker path shall give errors", err)
 	assertTrue(t, "Should not find any files", len(files) == 0)
 }
 
 func TestIsRotationNeeded(t *testing.T) {
-	media := createMedia("testmedia", ".", true, false, false, false, true, false, 0, false, false, false)
+	media := createMedia("testmedia", ".", true, false, false, false, true, false, 0, false, false, false, false)
 
 	rotationNeeded := media.isRotationNeeded("exif_rotate/180deg.jpg")
 	assertTrue(t, "Rotation should be needed", rotationNeeded)
@@ -98,7 +98,7 @@ func TestRotateAndWrite(t *testing.T) {
 	outFileName := "tmpout/TestRotateAndWrite/jpeg_rotated_fixed.jpg"
 	os.MkdirAll("tmpout/TestRotateAndWrite", os.ModePerm) // If already exist no problem
 	os.Remove(outFileName)
-	media := createMedia("testmedia", ".", true, false, false, false, true, false, 0, false, false, false)
+	media := createMedia("testmedia", ".", true, false, false, false, true, false, 0, false, false, false, false)
 	outFile, err := os.Create(outFileName)
 	assertExpectNoErr(t, "unable to create out", err)
 	defer outFile.Close()
@@ -127,7 +127,7 @@ func tEXIFThumbnail(t *testing.T, media *Media, filename string) {
 
 func TestWriteEXIFThumbnail(t *testing.T) {
 	os.MkdirAll("tmpout/TestWriteEXIFThumbnail", os.ModePerm) // If already exist no problem
-	media := createMedia("testmedia", ".", true, false, false, false, true, false, 0, false, false, false)
+	media := createMedia("testmedia", ".", true, false, false, false, true, false, 0, false, false, false, false)
 
 	tEXIFThumbnail(t, media, "normal.jpg")
 	tEXIFThumbnail(t, media, "180deg.jpg")
@@ -151,7 +151,7 @@ func TestWriteEXIFThumbnail(t *testing.T) {
 
 func TestFullPath(t *testing.T) {
 	// Root path
-	media := createMedia(".", ".", true, false, false, false, true, false, 0, false, false, false)
+	media := createMedia(".", ".", true, false, false, false, true, false, 0, false, false, false, false)
 	p, err := media.getFullMediaPath("afile.jpg")
 	assertExpectNoErr(t, "unable to get valid full path", err)
 	assertEqualsStr(t, "invalid path", "afile.jpg", p)
@@ -160,7 +160,7 @@ func TestFullPath(t *testing.T) {
 	assertExpectErr(t, "hackers shall not be allowed", err)
 
 	// Relative path
-	media = createMedia("arelative/path", ".", true, false, false, false, true, false, 0, false, false, false)
+	media = createMedia("arelative/path", ".", true, false, false, false, true, false, 0, false, false, false, false)
 	p, err = media.getFullMediaPath("afile.jpg")
 	assertExpectNoErr(t, "unable to get valid full path", err)
 	assertEqualsStr(t, "invalid path", "arelative/path/afile.jpg", p)
@@ -169,7 +169,7 @@ func TestFullPath(t *testing.T) {
 	assertExpectErr(t, "hackers shall not be allowed", err)
 
 	// Absolute path
-	media = createMedia("/root/absolute/path", ".", true, false, false, false, true, false, 0, false, false, false)
+	media = createMedia("/root/absolute/path", ".", true, false, false, false, true, false, 0, false, false, false, false)
 	p, err = media.getFullMediaPath("afile.jpg")
 	assertExpectNoErr(t, "unable to get valid full path", err)
 	assertEqualsStr(t, "invalid path", "/root/absolute/path/afile.jpg", p)
@@ -180,7 +180,7 @@ func TestFullPath(t *testing.T) {
 
 func TestRelativePath(t *testing.T) {
 	// Root path
-	media := createMedia("testmedia", ".", true, false, false, false, true, false, 0, false, false, false)
+	media := createMedia("testmedia", ".", true, false, false, false, true, false, 0, false, false, false, false)
 
 	result, err := media.getRelativePath("", "")
 	assertExpectNoErr(t, "", err)
@@ -243,7 +243,7 @@ func TestRelativePath(t *testing.T) {
 }
 
 func TestThumbnailPath(t *testing.T) {
-	media := createMedia("/c/mediapath", "/d/thumbpath", true, false, false, false, true, false, 0, false, false, false)
+	media := createMedia("/c/mediapath", "/d/thumbpath", true, false, false, false, true, false, 0, false, false, false, false)
 
 	thumbPath, err := media.cache.thumbnailPath("myimage.jpg")
 	assertExpectNoErr(t, "", err)
@@ -278,7 +278,7 @@ func tGenerateImageThumbnail(t *testing.T, media *Media, inFileName, outFileName
 func TestGenerateImageThumbnail(t *testing.T) {
 	os.MkdirAll("tmpout/TestGenerateImageThumbnail", os.ModePerm) // If already exist no problem
 
-	media := createMedia("", "", true, false, false, false, true, false, 0, false, false, false)
+	media := createMedia("", "", true, false, false, false, true, false, 0, false, false, false, false)
 
 	tGenerateImageThumbnail(t, media, "testmedia/jpeg.jpg", "tmpout/TestGenerateImageThumbnail/jpeg_thumbnail.jpg")
 	tGenerateImageThumbnail(t, media, "testmedia/jpeg_rotated.jpg", "tmpout/TestGenerateImageThumbnail/jpeg_rotated_thumbnail.jpg")
@@ -316,7 +316,7 @@ func TestWriteThumbnail(t *testing.T) {
 	os.RemoveAll("tmpout/TestWriteThumbnail")
 	os.MkdirAll("tmpout/TestWriteThumbnail", os.ModePerm)
 
-	media := createMedia("testmedia", "tmpcache/TestWriteThumbnail", true, false, false, false, true, false, 0, false, false, false)
+	media := createMedia("testmedia", "tmpcache/TestWriteThumbnail", true, false, false, false, true, false, 0, false, false, false, false)
 
 	// JPEG with embedded EXIF
 	tWriteThumbnail(t, media, "jpeg.jpg", "tmpout/TestWriteThumbnail/jpeg.jpg", false)
@@ -348,7 +348,7 @@ func TestWriteThumbnail(t *testing.T) {
 	tWriteThumbnail(t, media, "invalid.jpg", "tmpout/TestWriteThumbnail/invalid.jpg", true)
 
 	// Disable thumb cache
-	media = createMedia("testmedia", "tmpcache/TestWriteThumbnail", false, false, false, false, true, false, 0, false, false, false)
+	media = createMedia("testmedia", "tmpcache/TestWriteThumbnail", false, false, false, false, true, false, 0, false, false, false, false)
 
 	// JPEG with embedded EXIF
 	tWriteThumbnail(t, media, "jpeg.jpg", "tmpout/TestWriteThumbnail/jpeg.jpg", false)
@@ -391,7 +391,7 @@ func tGenerateVideoThumbnail(t *testing.T, media *Media, inFileName, outFileName
 }
 
 func TestGenerateVideoThumbnail(t *testing.T) {
-	media := createMedia("testmedia", ".", true, false, false, false, true, false, 0, false, false, false)
+	media := createMedia("testmedia", ".", true, false, false, false, true, false, 0, false, false, false, false)
 	if !hasVideoThumbnailSupport() {
 		t.Skip("ffmpeg not installed skipping test")
 		return
@@ -416,7 +416,7 @@ func TestGenerateThumbnails(t *testing.T) {
 	os.RemoveAll(cache)
 	os.MkdirAll(cache, os.ModePerm)
 
-	media := createMedia("testmedia", cache, true, false, false, false, true, false, 0, false, false, false)
+	media := createMedia("testmedia", cache, true, false, false, false, true, false, 0, false, false, false, false)
 	stat := media.generateCache("", true, true, false)
 	assertEqualsInt(t, "", 1, stat.NbrOfFolders)
 	assertEqualsInt(t, "", 20, stat.NbrOfImages)
@@ -463,7 +463,7 @@ func TestGeneratePreviews(t *testing.T) {
 	unnecessaryDirectory := filepath.Join(cache, "unnecessary_directory")
 	os.MkdirAll(unnecessaryDirectory, os.ModePerm)
 
-	media := createMedia("testmedia", cache, true, false, false, false, true, true, 1280, false, false, true)
+	media := createMedia("testmedia", cache, true, false, false, false, true, true, 1280, false, false, false, true)
 	stat := media.generateCache("", true, false, true)
 	assertEqualsInt(t, "", 1, stat.NbrOfFolders)
 	assertEqualsInt(t, "", 20, stat.NbrOfImages)
@@ -505,7 +505,7 @@ func TestGenerateThumbnailsAndPreviews(t *testing.T) {
 	unnecessaryDirectory := filepath.Join(cache, "unnecessary_directory")
 	os.MkdirAll(unnecessaryDirectory, os.ModePerm)
 
-	media := createMedia("testmedia", cache, true, false, false, false, true, true, 1280, false, false, false)
+	media := createMedia("testmedia", cache, true, false, false, false, true, true, 1280, false, false, false, false)
 	stat := media.generateCache("", true, true, true)
 	assertEqualsInt(t, "", 1, stat.NbrOfFolders)
 	assertEqualsInt(t, "", 20, stat.NbrOfImages)
@@ -543,7 +543,7 @@ func TestGenerateAllThumbnails(t *testing.T) {
 	os.RemoveAll(cache)
 	os.MkdirAll(cache, os.ModePerm)
 
-	media := createMedia("testmedia", cache, true, false, true, false, true, false, 0, false, false, false)
+	media := createMedia("testmedia", cache, true, false, true, false, true, false, 0, false, false, false, false)
 
 	for i := 0; i < 300; i++ {
 		time.Sleep(100 * time.Millisecond)
@@ -575,7 +575,7 @@ func TestGenerateAllPreviews(t *testing.T) {
 	os.RemoveAll(cache)
 	os.MkdirAll(cache, os.ModePerm)
 
-	media := createMedia("testmedia", cache, true, false, false, false, true, true, 1280, true, false, false)
+	media := createMedia("testmedia", cache, true, false, false, false, true, true, 1280, false, true, false, false)
 
 	for i := 0; i < 300; i++ {
 		time.Sleep(100 * time.Millisecond)
@@ -607,7 +607,7 @@ func TestGenerateAllThumbsAndPreviews(t *testing.T) {
 	os.RemoveAll(cache)
 	os.MkdirAll(cache, os.ModePerm)
 
-	media := createMedia("testmedia", cache, true, false, true, false, true, true, 1280, true, false, false)
+	media := createMedia("testmedia", cache, true, false, true, false, true, true, 1280, false, true, false, false)
 
 	for i := 0; i < 300; i++ {
 		time.Sleep(100 * time.Millisecond)
@@ -635,7 +635,7 @@ func TestGenerateNoThumbnails(t *testing.T) {
 	os.RemoveAll(cache)
 	os.MkdirAll(cache, os.ModePerm)
 
-	media := createMedia("testmedia", cache, true, false, false, false, true, false, 0, false, false, false)
+	media := createMedia("testmedia", cache, true, false, false, false, true, false, 0, false, false, false, false)
 
 	assertFalse(t, "", media.isPreCacheInProgress())
 	time.Sleep(100 * time.Millisecond)
@@ -651,7 +651,7 @@ func TestGenerateNoThumbnails(t *testing.T) {
 }
 
 func TestGetImageWidthAndHeight(t *testing.T) {
-	media := createMedia("", "", true, false, false, false, true, false, 0, false, false, false)
+	media := createMedia("", "", true, false, false, false, true, false, 0, false, false, false, false)
 
 	width, height, err := media.getImageWidthAndHeight("testmedia/jpeg.jpg")
 	assertExpectNoErr(t, "", err)
@@ -679,7 +679,7 @@ func TestGetImageWidthAndHeight(t *testing.T) {
 }
 
 func TestPreviewPath(t *testing.T) {
-	media := createMedia("/c/mediapath", "/d/thumbpath", true, false, false, false, true, true, 1280, false, false, false)
+	media := createMedia("/c/mediapath", "/d/thumbpath", true, false, false, false, true, true, 1280, false, false, false, false)
 
 	previewPath, err := media.cache.previewPath("myimage.jpg")
 	assertExpectNoErr(t, "", err)
@@ -711,14 +711,14 @@ func tGenerateImagePreview(t *testing.T, media *Media, inFileName, outFileName s
 	// Check dimensions
 	width, height, err := media.getImageWidthAndHeight(outFileName)
 	assertExpectNoErr(t, "reading dimensions", err)
-	assertFalse(t, "preview width", width > media.previewMaxSide)
-	assertFalse(t, "preview height", height > media.previewMaxSide)
+	assertFalse(t, "preview width", width > media.cache.previewMaxSide)
+	assertFalse(t, "preview height", height > media.cache.previewMaxSide)
 }
 
 func TestGenerateImagePreview(t *testing.T) {
 	os.MkdirAll("tmpout/TestGenerateImagePreview", os.ModePerm) // If already exist no problem
 
-	media := createMedia("", "", true, false, false, false, true, true, 1280, false, false, false)
+	media := createMedia("", "", true, false, false, false, true, true, 1280, false, false, false, false)
 
 	tGenerateImagePreview(t, media, "testmedia/jpeg.jpg", "tmpout/TestGenerateImagePreview/jpeg_preview.jpg")
 	tGenerateImagePreview(t, media, "testmedia/jpeg_rotated.jpg", "tmpout/TestGenerateImagePreview/jpeg_rotated_preview.jpg")
@@ -749,8 +749,8 @@ func tWritePreview(t *testing.T, media *Media, inFileName, outFileName string, f
 		// Check dimensions
 		width, height, err := media.getImageWidthAndHeight(outFileName)
 		assertExpectNoErr(t, "reading dimensions", err)
-		assertFalse(t, "preview width", width > media.previewMaxSide)
-		assertFalse(t, "preview height", height > media.previewMaxSide)
+		assertFalse(t, "preview width", width > media.cache.previewMaxSide)
+		assertFalse(t, "preview height", height > media.cache.previewMaxSide)
 	}
 }
 
@@ -760,7 +760,7 @@ func TestWritePreview(t *testing.T) {
 	os.RemoveAll("tmpout/TestWritePreview")
 	os.MkdirAll("tmpout/TestWritePreview", os.ModePerm)
 
-	media := createMedia("testmedia", "tmpcache/TestWritePreview", true, false, false, false, true, true, 970, false, false, false)
+	media := createMedia("testmedia", "tmpcache/TestWritePreview", true, false, false, false, true, true, 970, false, false, false, false)
 
 	// JPEG
 	tWritePreview(t, media, "jpeg.jpg", "tmpout/TestWritePreview/jpeg.jpg", false)
@@ -794,7 +794,7 @@ func TestWritePreview(t *testing.T) {
 	tWritePreview(t, media, "../../secret.jpg", "tmpout/TestWritePreview/invalid.jpg", true)
 
 	// Disable preview
-	media = createMedia("testmedia", "tmpcache/TestWritePreview", false, false, false, false, true, false, 0, false, false, false)
+	media = createMedia("testmedia", "tmpcache/TestWritePreview", false, false, false, false, true, false, 0, false, false, false, false)
 
 	// Should fail since preview is disabled now
 	tWritePreview(t, media, "jpeg.jpg", "tmpout/TestWritePreview/jpeg.jpg", true)
