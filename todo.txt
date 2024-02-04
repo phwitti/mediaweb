@@ -2,7 +2,8 @@
 [x] Rename thumbs/previews to XY.thumb.jpg and XY.preview.jpg
 
 [x] Add option to generate album thumbs (genalbumthumbs)
-[ ] Implement generation of album thumbs (version for 1,2,3,4 images) and save them as .mediaweb.album.jpg (or <albumname>.album.jpg)
+[ ] Create <hash-of-long-name> for album thumb generation always from <name-of-album> + (<name-of-graphics-involved>... sorted by name)
+[ ] Implement generation of album thumbs (version for 1,2,3,4 images) and save them as <hash-of-long-name>.album.jpg (or <albumname>.album.jpg)
 [ ] Return album thumbs on request for that album
 [ ] Fix issue with cache cleanup on start: don't cleanup album thumbs
 
