@@ -18,6 +18,7 @@ type settings struct {
 	ignoreExifThumbs         bool      // Ignore embedded exif thumbnails
 	genThumbsOnStartup       bool      // Generate all thumbnails on startup
 	genThumbsOnAdd           bool      // Generate thumbnails when file added (start watcher)
+	genAlbumThumbs           bool      // Generate album thumbnails
 	autoRotate               bool      // Rotate JPEG files when needed
 	enablePreview            bool      // Generate preview files
 	previewMaxSide           int       // Max height/width of preview file
@@ -129,6 +130,10 @@ func loadSettings(fileName string) settings {
 	// Load genthumbsonadd (OPTIONAL)
 	// Default: true
 	result.genThumbsOnAdd = readOptionalBool(section, "genthumbsonadd", true)
+
+	// Load genalbumthumbs (OPTIONAL)
+	// Default: true
+	result.genAlbumThumbs = readOptionalBool(section, "genalbumthumbs", true)
 
 	// Load autoRotate (OPTIONAL)
 	// Default: true

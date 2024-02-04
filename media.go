@@ -41,8 +41,8 @@ type File struct {
 // createMedia creates a new media. If thumb cache is enabled the path is
 // created when needed.
 func createMedia(mediaPath string, cachepath string, enableThumbCache bool, ignoreExifThumbs bool,
-	genThumbsOnStartup bool, genThumbsOnAdd bool, autoRotate bool, enablePreview bool,
-	previewMaxSide int, genPreviewForSmallImages bool, genPreviewOnStartup bool,
+	genThumbsOnStartup bool, genThumbsOnAdd bool, genAlbumThumbs bool, autoRotate bool,
+	enablePreview bool, previewMaxSide int, genPreviewForSmallImages bool, genPreviewOnStartup bool,
 	genPreviewOnAdd bool, enabledCacheCleanup bool) *Media {
 	log.Info("Media path: ", mediaPath)
 	if enableThumbCache || enablePreview {
@@ -71,7 +71,7 @@ func createMedia(mediaPath string, cachepath string, enableThumbCache bool, igno
 	log.Info("Video thumbnails supported (ffmpeg installed): ", hasVideoThumbnailSupport())
 	if enableThumbCache || enablePreview {
 		cachepath := filepath.ToSlash(filepath.Clean(cachepath))
-		media.cache = createCache(media, cachepath, previewMaxSide, genPreviewForSmallImages)
+		media.cache = createCache(media, cachepath, previewMaxSide, genPreviewForSmallImages, genAlbumThumbs)
 	}
 	if enableThumbCache && genThumbsOnStartup || enablePreview && genPreviewOnStartup {
 		go media.generateAllCache(enableThumbCache && genThumbsOnStartup, enablePreview && genPreviewOnStartup)

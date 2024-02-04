@@ -26,7 +26,7 @@ func mainCommon() *WebAPI {
 	log.Info("Git hash: ", applicationGitHash)
 	media := createMedia(s.mediaPath, s.cachePath,
 		s.enableThumbCache, s.ignoreExifThumbs, s.genThumbsOnStartup,
-		s.genThumbsOnAdd, s.autoRotate, s.enablePreview, s.previewMaxSide,
+		s.genThumbsOnAdd, s.genAlbumThumbs, s.autoRotate, s.enablePreview, s.previewMaxSide,
 		s.genPreviewForSmallImages, s.genPreviewOnStartup, s.genPreviewOnAdd,
 		s.enableCacheCleanup)
 	webAPI := CreateWebAPI(s.port, s.ip, "templates", media,
