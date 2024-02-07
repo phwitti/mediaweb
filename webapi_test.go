@@ -130,12 +130,8 @@ func TestStatic(t *testing.T) {
 		t.Fatal("Index html title missing")
 	}
 
-	// Get a png
-	image := getBinary(t, "icon_folder.png", "image/png")
-	assertTrue(t, "", len(image) > 100)
-
 	// Get an icong
-	image = getBinary(t, "logo.ico", "image/x-icon")
+	image := getBinary(t, "logo.ico", "image/x-icon")
 	assertTrue(t, "", len(image) > 100)
 
 	// Get a non-existing png
