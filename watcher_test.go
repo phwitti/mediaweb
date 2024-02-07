@@ -92,13 +92,13 @@ func TestWatcherImages(t *testing.T) {
 	copyFile(t, "templates/icon_image.png", mediaPath+"/icon_image.png")
 
 	// Verify that thumbnail was created
-	assertFileCreated(t, "", cache+"/_icon_image.jpg")
+	assertFileCreated(t, "", cache+"/icon_image.thumb.jpg")
 
 	// Remove file
 	os.Remove(mediaPath + "/icon_image.png")
 
 	// Verify that thumbnail was removed
-	assertFileRemoved(t, "", cache+"/_icon_image.jpg")
+	assertFileRemoved(t, "", cache+"/icon_image.thumb.jpg")
 
 	// Add many files
 	copyFile(t, "templates/icon_image.png", mediaPath+"/icon_image.png")
@@ -107,10 +107,10 @@ func TestWatcherImages(t *testing.T) {
 	copyFile(t, "testmedia/tiff.tiff", mediaPath+"/tiff.tiff")
 
 	// Verify that thumbnails where created
-	assertFileCreated(t, "", cache+"/_icon_image.jpg")
-	assertFileCreated(t, "", cache+"/_no_exif.jpg")
-	assertFileCreated(t, "", cache+"/_gif.jpg")
-	assertFileCreated(t, "", cache+"/_tiff.jpg")
+	assertFileCreated(t, "", cache+"/icon_image.thumb.jpg")
+	assertFileCreated(t, "", cache+"/no_exif.thumb.jpg")
+	assertFileCreated(t, "", cache+"/gif.thumb.jpg")
+	assertFileCreated(t, "", cache+"/tiff.thumb.jpg")
 
 }
 
@@ -144,10 +144,10 @@ func TestWatcherFileLocked(t *testing.T) {
 	copyFileExternal(t, "testmedia/tiff.tiff", mediaPath+"/tiff.tiff")
 
 	// Verify that thumbnails where created
-	assertFileCreated(t, "", cache+"/_icon_image.jpg")
-	assertFileCreated(t, "", cache+"/_no_exif.jpg")
-	assertFileCreated(t, "", cache+"/_gif.jpg")
-	assertFileCreated(t, "", cache+"/_tiff.jpg")
+	assertFileCreated(t, "", cache+"/icon_image.thumb.jpg")
+	assertFileCreated(t, "", cache+"/no_exif.thumb.jpg")
+	assertFileCreated(t, "", cache+"/gif.thumb.jpg")
+	assertFileCreated(t, "", cache+"/tiff.thumb.jpg")
 
 }
 
@@ -174,16 +174,16 @@ func TestWatcherSubfolder(t *testing.T) {
 	copyFile(t, "testmedia/tiff.tiff", mediaPath+"/subdir/tiff.tiff")
 
 	// Verify that thumbnails where created for subdirectory
-	assertFileCreated(t, "", cache+"/subdir/_icon_image.jpg")
-	assertFileCreated(t, "", cache+"/subdir/_no_exif.jpg")
-	assertFileCreated(t, "", cache+"/subdir/_gif.jpg")
-	assertFileCreated(t, "", cache+"/subdir/_tiff.jpg")
+	assertFileCreated(t, "", cache+"/subdir/icon_image.thumb.jpg")
+	assertFileCreated(t, "", cache+"/subdir/no_exif.thumb.jpg")
+	assertFileCreated(t, "", cache+"/subdir/gif.thumb.jpg")
+	assertFileCreated(t, "", cache+"/subdir/tiff.thumb.jpg")
 
 	// Add a subdirectory of the subdiretory
 	os.MkdirAll(mediaPath+"/subdir/submore", os.ModePerm)
 	time.Sleep(500 * time.Millisecond) // Wait for subfolder to be watched
 	copyFile(t, "testmedia/exif_rotate/no_exif.jpg", mediaPath+"/subdir/submore/no_exif.jpg")
-	assertFileCreated(t, "", cache+"/subdir/submore/_no_exif.jpg")
+	assertFileCreated(t, "", cache+"/subdir/submore/no_exif.thumb.jpg")
 
 	// Remove directory
 	os.RemoveAll(mediaPath + "/subdir/submore")
@@ -192,7 +192,7 @@ func TestWatcherSubfolder(t *testing.T) {
 	assertFileRemoved(t, "", cache+"/subdir/submore")
 
 	// But secure that other files are kept
-	assertFileCreated(t, "", cache+"/subdir/_icon_image.jpg")
+	assertFileCreated(t, "", cache+"/subdir/icon_image.thumb.jpg")
 }
 
 func TestWatcherVideo(t *testing.T) {
@@ -218,7 +218,7 @@ func TestWatcherVideo(t *testing.T) {
 	copyFile(t, "testmedia/video.mp4", mediaPath+"/video.mp4")
 
 	// Verify that thumbnail was created
-	assertFileCreated(t, "", cache+"/_video.jpg")
+	assertFileCreated(t, "", cache+"/video.thumb.jpg")
 }
 
 func TestWatchFolder(t *testing.T) {

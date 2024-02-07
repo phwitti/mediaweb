@@ -247,15 +247,15 @@ func TestThumbnailPath(t *testing.T) {
 
 	thumbPath, err := media.cache.thumbnailPath("myimage.jpg")
 	assertExpectNoErr(t, "", err)
-	assertEqualsStr(t, "", "/d/thumbpath/_myimage.jpg", thumbPath)
+	assertEqualsStr(t, "", "/d/thumbpath/myimage.thumb.jpg", thumbPath)
 
 	thumbPath, err = media.cache.thumbnailPath("subdrive/myimage.jpg")
 	assertExpectNoErr(t, "", err)
-	assertEqualsStr(t, "", "/d/thumbpath/subdrive/_myimage.jpg", thumbPath)
+	assertEqualsStr(t, "", "/d/thumbpath/subdrive/myimage.thumb.jpg", thumbPath)
 
 	thumbPath, err = media.cache.thumbnailPath("subdrive/myimage.png")
 	assertExpectNoErr(t, "", err)
-	assertEqualsStr(t, "", "/d/thumbpath/subdrive/_myimage.jpg", thumbPath)
+	assertEqualsStr(t, "", "/d/thumbpath/subdrive/myimage.thumb.jpg", thumbPath)
 
 	_, err = media.cache.thumbnailPath("subdrive/myimage")
 	assertExpectErr(t, "", err)
@@ -334,7 +334,7 @@ func TestWriteThumbnail(t *testing.T) {
 		// Test invalid
 		tWriteThumbnail(t, media, "invalidvideo.mp4", "tmpout/TestWriteThumbnail/invalidvideo.jpg", true)
 		// Check that error indication file is created
-		assertFileExist(t, "", "tmpcache/TestWriteThumbnail/_invalidvideo.err.txt")
+		assertFileExist(t, "", "tmpcache/TestWriteThumbnail/invalidvideo.thumb.err.txt")
 	}
 
 	// Non existing file
@@ -343,7 +343,7 @@ func TestWriteThumbnail(t *testing.T) {
 	// Invalid file
 	tWriteThumbnail(t, media, "invalid.jpg", "tmpout/TestWriteThumbnail/invalid.jpg", true)
 	// Check that error indication file is created
-	assertFileExist(t, "", "tmpcache/TestWriteThumbnail/_invalid.err.txt")
+	assertFileExist(t, "", "tmpcache/TestWriteThumbnail/invalid.thumb.err.txt")
 	// Generate again - just for coverage
 	tWriteThumbnail(t, media, "invalid.jpg", "tmpout/TestWriteThumbnail/invalid.jpg", true)
 
@@ -432,23 +432,23 @@ func TestGenerateThumbnails(t *testing.T) {
 	if hasVideoThumbnailSupport() {
 		assertEqualsInt(t, "", 1, stat.NbrOfVideoThumb)
 		assertEqualsInt(t, "", 1, stat.NbrOfFailedVideoThumb)
-		assertFileExist(t, "", filepath.Join(cache, "_video.jpg"))
+		assertFileExist(t, "", filepath.Join(cache, "video.thumb.jpg"))
 	} else {
 		assertEqualsInt(t, "", 0, stat.NbrOfVideoThumb)
 		assertEqualsInt(t, "", 2, stat.NbrOfFailedVideoThumb)
 	}
 
 	// Check that thumbnails where generated
-	assertFileExist(t, "", filepath.Join(cache, "_png.jpg"))
-	assertFileExist(t, "", filepath.Join(cache, "_gif.jpg"))
-	assertFileExist(t, "", filepath.Join(cache, "_tiff.jpg"))
-	assertFileExist(t, "", filepath.Join(cache, "exif_rotate", "_no_exif.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "png.thumb.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "gif.thumb.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "tiff.thumb.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "exif_rotate", "no_exif.thumb.jpg"))
 
 	// Check that thumbnails where not generated for EXIF images
-	assertFileNotExist(t, "", filepath.Join(cache, "_jpeg.jpg"))
-	assertFileNotExist(t, "", filepath.Join(cache, "_jpeg_rotated.jpg"))
-	assertFileNotExist(t, "", filepath.Join(cache, "exif_rotate", "_180deg.jpg"))
-	assertFileNotExist(t, "", filepath.Join(cache, "exif_rotate", "_mirror.jpg"))
+	assertFileNotExist(t, "", filepath.Join(cache, "jpeg.thumb.jpg"))
+	assertFileNotExist(t, "", filepath.Join(cache, "jpeg_rotated.thumb.jpg"))
+	assertFileNotExist(t, "", filepath.Join(cache, "exif_rotate", "180deg.thumb.jpg"))
+	assertFileNotExist(t, "", filepath.Join(cache, "exif_rotate", "mirror.thumb.jpg"))
 
 }
 
@@ -478,15 +478,15 @@ func TestGeneratePreviews(t *testing.T) {
 	assertEqualsInt(t, "", 2, stat.NbrRemovedCacheFiles)
 
 	// Check that previews where generated
-	assertFileExist(t, "", filepath.Join(cache, "view_png.jpg"))
-	assertFileExist(t, "", filepath.Join(cache, "view_gif.jpg"))
-	assertFileExist(t, "", filepath.Join(cache, "exif_rotate", "view_normal.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "png.preview.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "gif.preview.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "exif_rotate", "normal.preview.jpg"))
 
 	// Check that no thumbnails where generated
-	assertFileNotExist(t, "", filepath.Join(cache, "_png.jpg"))
-	assertFileNotExist(t, "", filepath.Join(cache, "_gif.jpg"))
-	assertFileNotExist(t, "", filepath.Join(cache, "_tiff.jpg"))
-	assertFileNotExist(t, "", filepath.Join(cache, "exif_rotate", "_no_exif.jpg"))
+	assertFileNotExist(t, "", filepath.Join(cache, "png.thumb.jpg"))
+	assertFileNotExist(t, "", filepath.Join(cache, "gif.thumb.jpg"))
+	assertFileNotExist(t, "", filepath.Join(cache, "tiff.thumb.jpg"))
+	assertFileNotExist(t, "", filepath.Join(cache, "exif_rotate", "no_exif.thumb.jpg"))
 
 	// Check that unnecessary files are removed
 	assertFileNotExist(t, "", unnecessaryFile)
@@ -520,15 +520,15 @@ func TestGenerateThumbnailsAndPreviews(t *testing.T) {
 	assertEqualsInt(t, "", 0, stat.NbrRemovedCacheFiles)
 
 	// Check that previews where generated
-	assertFileExist(t, "", filepath.Join(cache, "view_png.jpg"))
-	assertFileExist(t, "", filepath.Join(cache, "view_gif.jpg"))
-	assertFileExist(t, "", filepath.Join(cache, "exif_rotate", "view_normal.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "png.preview.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "gif.preview.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "exif_rotate", "normal.preview.jpg"))
 
 	// Check that thumbnails where generated
-	assertFileExist(t, "", filepath.Join(cache, "_png.jpg"))
-	assertFileExist(t, "", filepath.Join(cache, "_gif.jpg"))
-	assertFileExist(t, "", filepath.Join(cache, "_tiff.jpg"))
-	assertFileExist(t, "", filepath.Join(cache, "exif_rotate", "_no_exif.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "png.thumb.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "gif.thumb.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "tiff.thumb.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "exif_rotate", "no_exif.thumb.jpg"))
 
 	// Check that unnecessary files are kept
 	assertFileExist(t, "", unnecessaryFile)
@@ -554,19 +554,19 @@ func TestGenerateAllThumbnails(t *testing.T) {
 	assertFalse(t, "", media.isPreCacheInProgress())
 
 	// Check that thumbnails where generated
-	assertFileExist(t, "", filepath.Join(cache, "_png.jpg"))
-	assertFileExist(t, "", filepath.Join(cache, "_gif.jpg"))
-	assertFileExist(t, "", filepath.Join(cache, "_tiff.jpg"))
-	assertFileExist(t, "", filepath.Join(cache, "exif_rotate", "_no_exif.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "png.thumb.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "gif.thumb.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "tiff.thumb.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "exif_rotate", "no_exif.thumb.jpg"))
 
 	// Check that thumbnails where not generated for EXIF images
-	assertFileNotExist(t, "", filepath.Join(cache, "_jpeg.jpg"))
-	assertFileNotExist(t, "", filepath.Join(cache, "_jpeg_rotated.jpg"))
-	assertFileNotExist(t, "", filepath.Join(cache, "exif_rotate", "_180deg.jpg"))
-	assertFileNotExist(t, "", filepath.Join(cache, "exif_rotate", "_mirror.jpg"))
+	assertFileNotExist(t, "", filepath.Join(cache, "jpeg.thumb.jpg"))
+	assertFileNotExist(t, "", filepath.Join(cache, "jpeg_rotated.thumb.jpg"))
+	assertFileNotExist(t, "", filepath.Join(cache, "exif_rotate", "180deg.thumb.jpg"))
+	assertFileNotExist(t, "", filepath.Join(cache, "exif_rotate", "mirror.thumb.jpg"))
 
 	if hasVideoThumbnailSupport() {
-		assertFileExist(t, "", filepath.Join(cache, "_video.jpg"))
+		assertFileExist(t, "", filepath.Join(cache, "video.thumb.jpg"))
 	}
 }
 
@@ -586,20 +586,20 @@ func TestGenerateAllPreviews(t *testing.T) {
 	assertFalse(t, "", media.isPreCacheInProgress())
 
 	// Check that previews where generated
-	assertFileExist(t, "", filepath.Join(cache, "view_png.jpg"))
-	assertFileExist(t, "", filepath.Join(cache, "view_gif.jpg"))
-	assertFileExist(t, "", filepath.Join(cache, "exif_rotate", "view_normal.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "png.preview.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "gif.preview.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "exif_rotate", "normal.preview.jpg"))
 
 	// Check that no previews where generated for "small" images
-	assertFileNotExist(t, "", filepath.Join(cache, "view_tiff.jpg"))
-	assertFileNotExist(t, "", filepath.Join(cache, "view_screenshot_viewer.jpg"))
+	assertFileNotExist(t, "", filepath.Join(cache, "tiff.preview.jpg"))
+	assertFileNotExist(t, "", filepath.Join(cache, "screenshot_viewer.preview.jpg"))
 
 	// Check that no thumbnails where generated
-	assertFileNotExist(t, "", filepath.Join(cache, "_png.jpg"))
-	assertFileNotExist(t, "", filepath.Join(cache, "_gif.jpg"))
-	assertFileNotExist(t, "", filepath.Join(cache, "_tiff.jpg"))
-	assertFileNotExist(t, "", filepath.Join(cache, "exif_rotate", "_no_exif.jpg"))
-	assertFileNotExist(t, "", filepath.Join(cache, "_video.jpg"))
+	assertFileNotExist(t, "", filepath.Join(cache, "png.thumb.jpg"))
+	assertFileNotExist(t, "", filepath.Join(cache, "gif.thumb.jpg"))
+	assertFileNotExist(t, "", filepath.Join(cache, "tiff.thumb.jpg"))
+	assertFileNotExist(t, "", filepath.Join(cache, "exif_rotate", "no_exif.thumb.jpg"))
+	assertFileNotExist(t, "", filepath.Join(cache, "video.thumb.jpg"))
 }
 
 func TestGenerateAllThumbsAndPreviews(t *testing.T) {
@@ -618,15 +618,15 @@ func TestGenerateAllThumbsAndPreviews(t *testing.T) {
 	assertFalse(t, "", media.isPreCacheInProgress())
 
 	// Check that thumbnails where generated
-	assertFileExist(t, "", filepath.Join(cache, "_png.jpg"))
-	assertFileExist(t, "", filepath.Join(cache, "_gif.jpg"))
-	assertFileExist(t, "", filepath.Join(cache, "_tiff.jpg"))
-	assertFileExist(t, "", filepath.Join(cache, "exif_rotate", "_no_exif.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "png.thumb.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "gif.thumb.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "tiff.thumb.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "exif_rotate", "no_exif.thumb.jpg"))
 
 	// Check that previews where generated
-	assertFileExist(t, "", filepath.Join(cache, "view_png.jpg"))
-	assertFileExist(t, "", filepath.Join(cache, "view_gif.jpg"))
-	assertFileExist(t, "", filepath.Join(cache, "exif_rotate", "view_normal.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "png.preview.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "gif.preview.jpg"))
+	assertFileExist(t, "", filepath.Join(cache, "exif_rotate", "normal.preview.jpg"))
 
 }
 
@@ -683,15 +683,15 @@ func TestPreviewPath(t *testing.T) {
 
 	previewPath, err := media.cache.previewPath("myimage.jpg")
 	assertExpectNoErr(t, "", err)
-	assertEqualsStr(t, "", "/d/thumbpath/view_myimage.jpg", previewPath)
+	assertEqualsStr(t, "", "/d/thumbpath/myimage.preview.jpg", previewPath)
 
 	previewPath, err = media.cache.previewPath("subdrive/myimage.jpg")
 	assertExpectNoErr(t, "", err)
-	assertEqualsStr(t, "", "/d/thumbpath/subdrive/view_myimage.jpg", previewPath)
+	assertEqualsStr(t, "", "/d/thumbpath/subdrive/myimage.preview.jpg", previewPath)
 
 	previewPath, err = media.cache.previewPath("subdrive/myimage.png")
 	assertExpectNoErr(t, "", err)
-	assertEqualsStr(t, "", "/d/thumbpath/subdrive/view_myimage.jpg", previewPath)
+	assertEqualsStr(t, "", "/d/thumbpath/subdrive/myimage.preview.jpg", previewPath)
 
 	_, err = media.cache.previewPath("subdrive/myimage")
 	assertExpectErr(t, "", err)
@@ -786,7 +786,7 @@ func TestWritePreview(t *testing.T) {
 	// Invalid file
 	tWritePreview(t, media, "invalid.jpg", "tmpout/TestWritePreview/invalid.jpg", true)
 	// Check that error indication file is created
-	assertFileExist(t, "", "tmpcache/TestWritePreview/view_invalid.err.txt")
+	assertFileExist(t, "", "tmpcache/TestWritePreview/invalid.preview.err.txt")
 	// Regenerate for increased coverage
 	tWritePreview(t, media, "invalid.jpg", "tmpout/TestWritePreview/invalid.jpg", true)
 

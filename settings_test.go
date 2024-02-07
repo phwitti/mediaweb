@@ -58,7 +58,7 @@ enablecachecleanup = on
 loglevel = debug
 logfile = /tmp/log/mediaweb.log
 username = an_email@password.com
-password = A!#_q7*+
+password = """A!#_q7*+"""
 tlscertfile = /file/my_cert_file.crt
 tlskeyfile = /file/my_cert_file.key
 `

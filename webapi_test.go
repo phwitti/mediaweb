@@ -92,7 +92,7 @@ func startserver(t *testing.T) {
 // waitserver waits for the server to be up and running
 func waitserver(t *testing.T) {
 	t.Helper()
-	client := http.Client{Timeout: 100 * time.Millisecond}
+	client := http.Client{Timeout: 1000 * time.Millisecond}
 	maxTries := 50
 	for i := 0; i < maxTries; i++ {
 		_, err := client.Get(baseURL)
