@@ -147,7 +147,12 @@ func (c *Cache) errorIndicationPath(anyPath string) string {
 // and returns the file name of the thumbnail. If a thumbnail already
 // exist the file name will be returned.
 func (c *Cache) generateThumbnail(m *Media, relativeFilePath string) (string, error) {
-	thumbFileName, err := c.thumbnailPath(relativeFilePath)
+	relativeThumbPath, err := c.relativeThumbnailPath(relativeFilePath)
+	if err != nil {
+		log.Warn(err)
+		return "", err
+	}
+	thumbFileName, err := c.getFullCachePath(relativeThumbPath)
 	if err != nil {
 		log.Warn(err)
 		return "", err
@@ -184,6 +189,9 @@ func (c *Cache) generateThumbnail(m *Media, relativeFilePath string) (string, er
 		c.generateErrorIndicationFile(errorIndicationFile, err)
 		return "", err
 	}
+
+	c.thumbnails[relativeThumbPath] = time.Now()
+
 	deltaTime := (time.Now().UnixNano() - startTime) / int64(time.Millisecond)
 	log.Infof("Thumbnail done for %s (conversion time: %d ms)", relativeFilePath, deltaTime)
 	return thumbFileName, nil
@@ -192,7 +200,12 @@ func (c *Cache) generateThumbnail(m *Media, relativeFilePath string) (string, er
 // generatePreview generates a preview image and returns the file name of the
 // preview. If a preview file already exist the file name will be returned.
 func (c *Cache) generatePreview(m *Media, relativeFilePath string) (string, bool, error) {
-	previewFileName, err := c.previewPath(relativeFilePath)
+	relativePreviewPath, err := c.relativePreviewPath(relativeFilePath)
+	if err != nil {
+		log.Warn(err)
+		return "", false, err
+	}
+	previewFileName, err := c.getFullCachePath(relativePreviewPath)
 	if err != nil {
 		log.Warn(err)
 		return "", false, err
@@ -241,6 +254,9 @@ func (c *Cache) generatePreview(m *Media, relativeFilePath string) (string, bool
 		c.generateErrorIndicationFile(errorIndicationFile, err)
 		return "", false, err
 	}
+
+	c.previews[relativePreviewPath] = time.Now()
+
 	deltaTime := (time.Now().UnixNano() - startTime) / int64(time.Millisecond)
 	log.Infof("Preview done for %s (conversion time: %d ms)", relativeFilePath, deltaTime)
 	return previewFileName, false, nil

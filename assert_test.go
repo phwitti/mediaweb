@@ -70,3 +70,19 @@ func assertFileNotExist(t *testing.T, message string, name string) {
 		t.Fatalf("%s : %s exist but shall not", message, name)
 	}
 }
+
+func assertCacheThumbExists(t *testing.T, c *Cache, message string, name string) {
+	t.Helper()
+	if !c.hasThumbnail(name) {
+		debug.PrintStack()
+		t.Fatalf("%s : %s thumb does not exist in cache", message, name)
+	}
+}
+
+func assertCachePreviewExists(t *testing.T, c *Cache, message string, name string) {
+	t.Helper()
+	if !c.hasPreview(name) {
+		debug.PrintStack()
+		t.Fatalf("%s : %s preview does not exist in cache", message, name)
+	}
+}
