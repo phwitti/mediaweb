@@ -369,6 +369,7 @@ type PreCacheStatistics struct {
 	NbrOfImageThumb         int
 	NbrOfVideoThumb         int
 	NbrOfImagePreview       int
+	NbrOfAlbumImagePreview  int
 	NbrOfFailedFolders      int // I.e. unable to list contents of folder
 	NbrOfFailedImageThumb   int
 	NbrOfFailedVideoThumb   int
@@ -393,6 +394,7 @@ func (m *Media) updateCache(c *Cache, relativePath string, recursive bool, thumb
 	m.preCacheInProgress = true
 	defer func() { m.preCacheInProgress = prevProgress }()
 
+	topFiles := []string{}
 	stat := PreCacheStatistics{}
 	files, err := m.getFiles(relativePath)
 	if err != nil {
@@ -437,6 +439,7 @@ func (m *Media) updateCache(c *Cache, relativePath string, recursive bool, thumb
 					}
 				}
 			}
+
 			if thumbnails && !hasExifThumb && !c.hasThumbnail(file.Path) {
 				// Generate new thumbnail
 				_, err = c.generateThumbnail(m, file.Path)
@@ -454,6 +457,7 @@ func (m *Media) updateCache(c *Cache, relativePath string, recursive bool, thumb
 					}
 				}
 			}
+
 			if preview && file.Type == "image" && !c.hasPreview(file.Path) {
 				// Generate new preview
 				_, tooSmall, err := c.generatePreview(m, file.Path)
@@ -467,8 +471,28 @@ func (m *Media) updateCache(c *Cache, relativePath string, recursive bool, thumb
 					stat.NbrOfImagePreview++
 				}
 			}
+
+			if len(topFiles) < 9 && c.genAlbumThumbs && (hasExifThumb || c.hasThumbnail(file.Path)) {
+				topFiles = append(topFiles, file.Name)
+			}
 		}
 	}
+
+	if len(topFiles) != 0 {
+		relativeAlbumPreviewPath := c.relativeAlbumThumbnailPath(relativePath, topFiles)
+		if !c.hasAlbumThumbnail(relativeAlbumPreviewPath) {
+			err := c.generateAlbumThumbnail(m, relativeAlbumPreviewPath, relativePath, topFiles)
+			if err != nil {
+				stat.NbrOfFailedImagePreview++
+			} else {
+				stat.NbrOfAlbumImagePreview++
+				files = append(files, File{Type: "image", Name: filepath.Base(relativeAlbumPreviewPath), Path: relativeAlbumPreviewPath})
+			}
+		} else {
+			files = append(files, File{Type: "image", Name: filepath.Base(relativeAlbumPreviewPath), Path: relativeAlbumPreviewPath})
+		}
+	}
+
 	if m.enableCacheCleanup {
 		stat.NbrRemovedCacheFiles += c.cleanupCache(relativePath, files)
 	}

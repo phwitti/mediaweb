@@ -3,10 +3,14 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"hash"
+	"hash/fnv"
 	"image"
+	"image/color"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -22,6 +26,7 @@ type Cache struct {
 	genAlbumThumbs           bool
 	thumbnails               map[string]time.Time // Key: relativePath of thumbnail to cachepath, Value: time of last update
 	previews                 map[string]time.Time // Key: relativePath of preview to cachepath, Value: time of last update
+	albumThumbnails          map[string]time.Time // Key: relativePath of preview to cachepath, Value: time of last update
 }
 
 func createCache(m *Media, cachepath string, previewMaxSide int, genPreviewForSmallImages bool, genAlbumThumbs bool) *Cache {
@@ -62,8 +67,8 @@ func (c *Cache) loadCache(relativePath string, recursive bool) {
 	}
 }
 
-func (c *Cache) hasThumbnail(fullPath string) bool {
-	path, err := c.relativeThumbnailPath(fullPath)
+func (c *Cache) hasThumbnail(relativeMediaPath string) bool {
+	path, err := c.relativeThumbnailPath(relativeMediaPath)
 	if err != nil {
 		log.Warn(err)
 		return false
@@ -72,13 +77,18 @@ func (c *Cache) hasThumbnail(fullPath string) bool {
 	return ok
 }
 
-func (c *Cache) hasPreview(fullPath string) bool {
-	path, err := c.relativePreviewPath(fullPath)
+func (c *Cache) hasPreview(relativeMediaPath string) bool {
+	path, err := c.relativePreviewPath(relativeMediaPath)
 	if err != nil {
 		log.Warn(err)
 		return false
 	}
 	_, ok := c.previews[path]
+	return ok
+}
+
+func (c *Cache) hasAlbumThumbnail(relativeAlbumPreviewPath string) bool {
+	_, ok := c.albumThumbnails[relativeAlbumPreviewPath]
 	return ok
 }
 
@@ -132,6 +142,20 @@ func (c *Cache) relativePreviewPath(relativeMediaPath string) (string, error) {
 	}
 	file = strings.Replace(file, ext, ".preview.jpg", -1)
 	return filepath.ToSlash(filepath.Join(path, file)), nil
+}
+
+var fnvHash hash.Hash64
+
+func (c *Cache) relativeAlbumThumbnailPath(relativeAlbumPath string, files []string) string {
+	if fnvHash == nil {
+		fnvHash = fnv.New64()
+	}
+
+	_, folder := filepath.Split(relativeAlbumPath)
+
+	fnvHash.Reset()
+	fnvHash.Write([]byte(folder + strings.Join(files, "")))
+	return filepath.Join(relativeAlbumPath, strconv.FormatUint(fnvHash.Sum64(), 10)) + ".jpg"
 }
 
 // errorIndicationPath returns the file path with the extension
@@ -260,6 +284,111 @@ func (c *Cache) generatePreview(m *Media, relativeFilePath string) (string, bool
 	deltaTime := (time.Now().UnixNano() - startTime) / int64(time.Millisecond)
 	log.Infof("Preview done for %s (conversion time: %d ms)", relativeFilePath, deltaTime)
 	return previewFileName, false, nil
+}
+
+func (c *Cache) generateAlbumThumbnail(m *Media, relativeAlbumPreviewPath string, albumPath string, files []string) error {
+	relativePreviewPath, err := c.relativePreviewPath(relativeAlbumPreviewPath)
+	if err != nil {
+		log.Warn(err)
+		return err
+	}
+	previewFileName, err := c.getFullCachePath(relativePreviewPath)
+	if err != nil {
+		log.Warn(err)
+		return err
+	}
+	_, err = os.Stat(previewFileName) // Check if file exist
+	if err == nil {
+		return nil // Preview already generated
+	}
+
+	var thumbImg image.Image
+	if len(files) <= 4 {
+		thumbImg = c.generateAlbumThumbnail_4x4(m, albumPath, files)
+	} else {
+		thumbImg = c.generateAlbumThumbnail_9x9(m, albumPath, files)
+	}
+
+	// Create subdirectories if needed
+	directory := filepath.Dir(previewFileName)
+	err = os.MkdirAll(directory, os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("unable to create directories in %s for creating thumbnail, reason %s", previewFileName, err)
+	}
+
+	// Write thumbnail to file
+	outFile, err := os.Create(previewFileName)
+	if err != nil {
+		return fmt.Errorf("unable to open %s for creating thumbnail, reason %s", previewFileName, err)
+	}
+	defer outFile.Close()
+	err = imaging.Encode(outFile, thumbImg, imaging.JPEG)
+
+	return err
+}
+
+func (c *Cache) generateAlbumThumbnail_4x4(m *Media, albumPath string, files []string) image.Image {
+	size_org := 256
+	size_small := 128
+	positionsX := []int{0, 1, 0, 1}
+	positionsY := []int{0, 0, 1, 1}
+
+	var err error
+	var thumbImg image.Image
+	thumbImg = imaging.New(size_org, size_org, color.Black)
+
+	index := 0
+	for _, file := range files {
+		thumbImg, err = c.placeImageThumbnail(m, thumbImg, filepath.Join(albumPath, file), size_small, positionsX[index], positionsY[index])
+		if err != nil {
+			continue
+		}
+
+		index = index + 1
+		if index >= 4 {
+			break
+		}
+	}
+	return thumbImg
+}
+
+func (c *Cache) generateAlbumThumbnail_9x9(m *Media, albumPath string, files []string) image.Image {
+	size_org := 256
+	size_small := 86
+	positionsX := []int{0, 1, 2, 0, 1, 2, 0, 1, 2}
+	positionsY := []int{0, 0, 0, 1, 1, 1, 2, 2, 2}
+
+	var err error
+	var thumbImg image.Image
+	thumbImg = imaging.New(size_org, size_org, color.Black)
+
+	index := 0
+	for _, file := range files {
+		thumbImg, err = c.placeImageThumbnail(m, thumbImg, filepath.Join(albumPath, file), size_small, positionsX[index], positionsY[index])
+		if err != nil {
+			continue
+		}
+
+		index = index + 1
+		if index >= 9 {
+			break
+		}
+	}
+	return thumbImg
+}
+
+func (c *Cache) placeImageThumbnail(m *Media, thumb image.Image, relativeMediaPath string, size int, positionX int, positionY int) (image.Image, error) {
+	var buffer bytes.Buffer
+	err := m.writeThumbnail(&buffer, relativeMediaPath)
+	if err != nil {
+		return nil, err
+	}
+	img, err := imaging.Decode(&buffer)
+	if err != nil {
+		return nil, err
+	}
+	smallImg := imaging.Resize(img, size, size, imaging.Box)
+	return imaging.Paste(thumb, smallImg, image.Point{X: positionX * size, Y: positionY * size}), nil
 }
 
 // generateErrorIndication creates a text file including the error reason.
