@@ -71,7 +71,7 @@ func createMedia(mediaPath string, cachepath string, enableThumbCache bool, igno
 	log.Info("Video thumbnails supported (ffmpeg installed): ", hasVideoThumbnailSupport())
 	if enableThumbCache || enablePreview {
 		cachepath := filepath.ToSlash(filepath.Clean(cachepath))
-		media.cache = createCache(media, cachepath, previewMaxSide, genPreviewForSmallImages, genAlbumThumbs)
+		media.cache = createCache(cachepath, previewMaxSide, genPreviewForSmallImages, genAlbumThumbs)
 	}
 	if enableThumbCache && genThumbsOnStartup || enablePreview && genPreviewOnStartup {
 		go media.generateAllCache(enableThumbCache && genThumbsOnStartup, enablePreview && genPreviewOnStartup)

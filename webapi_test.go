@@ -106,6 +106,8 @@ func waitserver(t *testing.T) {
 
 // shutdown shuts down server and clears the serveMux
 func shutdown(t *testing.T) {
+	_ = t
+
 	// No answer expected on POST shutdown (short timeout)
 	client := http.Client{Timeout: 1 * time.Second}
 	client.Post(fmt.Sprintf("%s/shutdown", baseURL), "", nil)

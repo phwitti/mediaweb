@@ -29,7 +29,7 @@ type Cache struct {
 	albumThumbnails          map[string]time.Time // Key: relativePath of preview to cachepath, Value: time of last update
 }
 
-func createCache(m *Media, cachepath string, previewMaxSide int, genPreviewForSmallImages bool, genAlbumThumbs bool) *Cache {
+func createCache(cachepath string, previewMaxSide int, genPreviewForSmallImages bool, genAlbumThumbs bool) *Cache {
 	c := &Cache{
 		cachepath:                cachepath,
 		previewMaxSide:           previewMaxSide,
