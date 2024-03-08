@@ -1,11 +1,11 @@
 [x] Process folders by first reading in all files names and then doing the rest in memory
 [x] Rename thumbs/previews to XY.thumb.jpg and XY.preview.jpg
-
 [x] Add option to generate album thumbs (genalbumthumbs)
-[ ] Create <hash-of-long-name> for album thumb generation always from <name-of-album> + (<name-of-graphics-involved>... sorted by name)
-[ ] Implement generation of album thumbs (version for 1,2,3,4 images) and save them as <hash-of-long-name>.album.jpg (or <albumname>.album.jpg)
+[x] Create <hash-of-long-name> for album thumb generation always from <name-of-album> + (<name-of-graphics-involved>... sorted by name)
+[x] Implement generation of album thumbs (version for 4,9 images) and save them as <hash-of-long-name>.preview.jpg
+[x] Fix issue with cache cleanup on start: don't cleanup album thumbs
+
 [ ] Return album thumbs on request for that album
-[ ] Fix issue with cache cleanup on start: don't cleanup album thumbs
 
 [ ] Add option to generate super small preview (as base64) into database file for each album (gensmallthumbs)
 [ ] Generate super small preview and save into .mediaweb.smallthumbs.json for every album (or <albumname>.smallthumbs.json)
@@ -16,7 +16,7 @@
 [ ] Dynamically add found objects into the cache
 [ ] Dynamically cleanup?
 
-[ ] Implement generation of album thumbs (versions for [2,3,4,5,6+] images) and save them as .mediaweb.album.jpg (or <albumname>.album.jpg)
+[ ] Implement extended generation of album thumbs (versions for [2,3,5,6,7,8] images)
 [ ] Replace parameter list of createMedia with config-object
 [ ] Add gogc (debug.SetGCPercent()) and memlimit (debug.SetMemoryLimit(x)) variables to conf
 [ ] Enable runtime.GC() to run after each image? (should probably attemt to "automate" that with the other two variables...)
